@@ -10,13 +10,13 @@ type ButtonProps = ComponentPropsWithoutRef<"button"> & {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-accent text-white hover:opacity-90 active:opacity-80",
+    "bg-brand text-white hover:opacity-90 active:opacity-80",
   secondary:
     "border border-black text-black hover:bg-black hover:text-white",
   "secondary-inverted":
     "border border-white text-white hover:bg-white hover:text-black",
   ghost:
-    "text-black underline decoration-accent underline-offset-4 hover:opacity-70",
+    "text-black underline decoration-brand underline-offset-4 hover:opacity-70",
 };
 
 const baseStyles =

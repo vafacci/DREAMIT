@@ -84,7 +84,7 @@ export function ImageCarousel({
               type="button"
               onClick={() => scrollTo(index)}
               className={`h-[2px] transition-all duration-300 ${
-                index === active ? "w-8 bg-accent" : inactiveDot
+                index === active ? "w-8 bg-brand" : inactiveDot
               }`}
               aria-label={`Gå til billede ${index + 1}`}
               aria-current={index === active}

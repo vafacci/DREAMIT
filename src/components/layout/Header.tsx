@@ -25,12 +25,12 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 overflow-hidden bg-black text-white">
-      <div className="container-site relative flex h-16 items-center lg:h-20">
+      <div className="container-site grid h-16 grid-cols-[1fr_auto_1fr] items-center lg:h-20">
         {/* Symbol + desktop navigation — venstre */}
         <div className="flex items-center gap-8">
           <Link
             href="/"
-            className="inline-flex shrink-0 items-center"
+            className="inline-flex h-8 items-center lg:h-9"
             onClick={() => setMenuOpen(false)}
             aria-label={SITE_NAME}
           >
@@ -53,7 +53,7 @@ export function Header() {
         {/* DREAMit — centreret */}
         <Link
           href="/"
-          className="absolute left-1/2 top-1/2 inline-flex -translate-x-1/2 -translate-y-1/2 items-center"
+          className="inline-flex h-8 items-center justify-self-center lg:h-9"
           onClick={() => setMenuOpen(false)}
           aria-label={SITE_NAME}
         >
@@ -61,7 +61,7 @@ export function Header() {
         </Link>
 
         {/* Desktop CTAs + mobil menu — højre */}
-        <div className="ml-auto flex items-center gap-3">
+        <div className="flex items-center justify-end gap-3 justify-self-end">
           <div className="hidden items-center gap-3 lg:flex">
             <Button
               href={CTA_SECONDARY_HREF}
@@ -77,7 +77,7 @@ export function Header() {
 
           <button
             type="button"
-            className="text-[14px] font-medium tracking-wide text-white lg:hidden"
+            className="inline-flex h-8 items-center text-[14px] font-medium tracking-wide text-white lg:hidden lg:h-9"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"

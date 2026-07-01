@@ -27,7 +27,7 @@ export function PackageCard({
       <ul className="flex flex-col gap-2 text-body text-black/80">
         {features.map((feature) => (
           <li key={feature} className="flex gap-2">
-            <span className="text-accent">·</span>
+            <span className="text-brand">·</span>
             {feature}
           </li>
         ))}

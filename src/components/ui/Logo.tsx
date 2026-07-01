@@ -1,37 +1,38 @@
 import Image from "next/image";
+import logoBrand from "@/assets/logo-brand.png";
+import logoSymbol from "@/assets/logo-symbol.png";
+
+const LOGO_HEIGHT = "h-8 lg:h-9";
 
 type LogoPartProps = {
   className?: string;
 };
 
 export function LogoSymbol({
-  className = "h-12 w-12 shrink-0 lg:h-14 lg:w-14",
+  className = `${LOGO_HEIGHT} w-8 shrink-0 lg:w-9`,
 }: LogoPartProps) {
   return (
-    <span
-      className={`relative inline-flex translate-y-[3px] items-center justify-center overflow-hidden ${className}`}
-    >
-      <Image
-        src="/logo-symbol.png"
-        alt=""
-        width={1024}
-        height={1024}
-        className="h-full w-full scale-[1.7] object-contain"
-        priority
-        aria-hidden
-      />
-    </span>
+    <Image
+      src={logoSymbol}
+      alt=""
+      className={`object-contain ${className}`}
+      priority
+      aria-hidden
+    />
   );
 }
 
-export function LogoWordmark({ className = "" }: LogoPartProps) {
+export function LogoWordmark({
+  className = `${LOGO_HEIGHT} w-auto shrink-0`,
+}: LogoPartProps) {
   return (
-    <span
-      className={`font-heading inline-flex items-baseline text-[1.65rem] leading-none lg:text-[2.1rem] ${className}`}
-    >
-      <span className="text-white uppercase tracking-[0.04em]">DREAM</span>
-      <span className="text-accent italic">it</span>
-    </span>
+    <Image
+      src={logoBrand}
+      alt=""
+      className={`object-contain ${className}`}
+      priority
+      aria-hidden
+    />
   );
 }
 

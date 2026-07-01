@@ -66,7 +66,7 @@ function ProblemStepPanel({ step }: { step: ProblemStep }) {
           </h3>
           <p className="text-body text-black/60">{step.subtitle}</p>
         </div>
-        <span className="shrink-0 font-heading text-2xl leading-none text-accent lg:text-3xl">
+        <span className="shrink-0 font-heading text-2xl leading-none text-brand lg:text-3xl">
           {step.number}
         </span>
       </div>

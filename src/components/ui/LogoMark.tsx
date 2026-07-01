@@ -23,7 +23,7 @@ export function LogoMark({ className = "" }: LogoMarkProps) {
         <path
           key={d}
           d={d}
-          stroke="#B86F5B"
+          stroke="#B2190C"
           strokeWidth={10 - index * 1.6}
           strokeLinecap="round"
           strokeLinejoin="round"

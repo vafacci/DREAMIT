@@ -128,12 +128,12 @@ export function ScrollBrandMark() {
     <div className="pointer-events-none fixed inset-0 z-[5] overflow-hidden" aria-hidden="true">
       <div
         ref={gradientARef}
-        className="absolute inset-0 bg-gradient-to-br from-accent/20 via-transparent to-transparent"
+        className="absolute inset-0 bg-gradient-to-br from-brand/20 via-transparent to-transparent"
         style={{ opacity: 0.35 }}
       />
       <div
         ref={gradientBRef}
-        className="absolute inset-0 bg-gradient-to-tl from-accent/25 via-transparent to-transparent"
+        className="absolute inset-0 bg-gradient-to-tl from-brand/25 via-transparent to-transparent"
         style={{ opacity: 0 }}
       />
 

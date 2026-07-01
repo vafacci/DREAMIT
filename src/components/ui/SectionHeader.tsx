@@ -18,7 +18,7 @@ export function SectionHeader({
   return (
     <div className={`max-w-xl ${className}`}>
       {label && (
-        <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.2em] text-accent">
+        <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.2em] text-brand">
           {label}
         </p>
       )}

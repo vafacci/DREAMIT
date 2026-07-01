@@ -37,7 +37,7 @@ export function HeroScrollExperience() {
         </div>
 
         <div
-          className="pointer-events-none absolute inset-0 z-[15] bg-gradient-to-br from-accent/10 via-transparent to-transparent"
+          className="pointer-events-none absolute inset-0 z-[15] bg-gradient-to-br from-brand/10 via-transparent to-transparent"
           style={{ opacity: t.accentGlowOpacity }}
           aria-hidden="true"
         />
@@ -51,10 +51,6 @@ export function HeroScrollExperience() {
           }}
         >
           <div className="container-site flex max-w-lg flex-col items-center text-center">
-            <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.2em] text-accent">
-              Launch studio
-            </p>
-
             <h1 className="text-h1-mobile lg:text-h1-desktop mb-6 tracking-[0.02em] text-white">
               fra <span className="uppercase">hobby</span>
               <br />
@@ -88,7 +84,7 @@ export function HeroScrollExperience() {
           <span className="text-[11px] uppercase tracking-[0.2em] text-white/50">
             Scroll
           </span>
-          <span className="block h-8 w-px animate-pulse bg-accent" />
+          <span className="block h-8 w-px animate-pulse bg-brand" />
         </div>
       </div>
     </section>

@@ -19,7 +19,7 @@ export function FAQItem({ question, answer }: FAQItemProps) {
         aria-expanded={open}
       >
         <span className="text-body font-medium">{question}</span>
-        <span className="text-accent text-xl leading-none">{open ? "−" : "+"}</span>
+        <span className="text-brand text-xl leading-none">{open ? "−" : "+"}</span>
       </button>
       {open && (
         <p className="pb-5 text-body text-black/70">{answer}</p>

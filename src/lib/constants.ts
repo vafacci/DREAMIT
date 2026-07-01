@@ -20,5 +20,5 @@ export const CTA_SECONDARY_HREF = "#proces";
 export const COLORS = {
   black: "#000000",
   white: "#FFFFFF",
-  accent: "#B86F5B",
+  accent: "#B2190C",
 } as const;
