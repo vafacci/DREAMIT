@@ -1,6 +1,6 @@
 import Image from "next/image";
-import logoBrand from "@/assets/logo-brand.png";
-import logoSymbol from "@/assets/logo-symbol.png";
+import logoBrand from "@/assets/logo-brand.webp";
+import logoSymbol from "@/assets/logo-symbol.webp";
 
 const LOGO_HEIGHT = "h-8 lg:h-9";
 
@@ -17,6 +17,7 @@ export function LogoSymbol({
       alt=""
       className={`object-contain ${className}`}
       priority
+      sizes="36px"
       aria-hidden
     />
   );
@@ -31,6 +32,7 @@ export function LogoWordmark({
       alt=""
       className={`object-contain ${className}`}
       priority
+      sizes="120px"
       aria-hidden
     />
   );

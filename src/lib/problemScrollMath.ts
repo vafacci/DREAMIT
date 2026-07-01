@@ -23,6 +23,7 @@ export function getProblemPanelTransform(
   panelIndex: number,
   progress: number,
   totalPanels: number,
+  lite = false,
 ): PanelTransform {
   const t = progress * (totalPanels - 1);
   const distance = t - panelIndex;
@@ -30,10 +31,10 @@ export function getProblemPanelTransform(
   if (distance < -1 || distance > 1) {
     return {
       opacity: 0,
-      rotateX: distance < -1 ? -6 : 6,
-      translateY: distance < -1 ? 10 : -10,
-      translateZ: -80,
-      scale: 0.97,
+      rotateX: 0,
+      translateY: distance < -1 ? 8 : -8,
+      translateZ: 0,
+      scale: 1,
       contentY: 0,
       zIndex: panelIndex,
       pointerEvents: "none",
@@ -50,20 +51,30 @@ export function getProblemPanelTransform(
   if (distance < 0) {
     const e = smoothEase(distance + 1);
     const lift = 1 - e;
-    rotateX = lift * 7;
-    translateY = lift * 14;
-    translateZ = lift * -55;
-    scale = 0.965 + e * 0.035;
-    contentY = lift * 10;
-    opacity = e;
+    if (lite) {
+      translateY = lift * 18;
+      opacity = e;
+    } else {
+      rotateX = lift * 7;
+      translateY = lift * 14;
+      translateZ = lift * -55;
+      scale = 0.965 + e * 0.035;
+      contentY = lift * 10;
+      opacity = e;
+    }
   } else {
     const e = smoothEase(distance);
-    rotateX = -e * 7;
-    translateY = -e * 14;
-    translateZ = -e * 55;
-    scale = 1 - e * 0.035;
-    contentY = -e * 10;
-    opacity = 1 - e;
+    if (lite) {
+      translateY = -e * 18;
+      opacity = 1 - e;
+    } else {
+      rotateX = -e * 7;
+      translateY = -e * 14;
+      translateZ = -e * 55;
+      scale = 1 - e * 0.035;
+      contentY = -e * 10;
+      opacity = 1 - e;
+    }
   }
 
   const zIndex =

@@ -10,10 +10,11 @@ import {
   PROBLEM_STEPS,
   type ProblemStep,
 } from "@/lib/problemContent";
+import { isMobileDevice } from "@/lib/isMobileDevice";
 import {
   PROBLEM_PANEL_COUNT,
-  PROBLEM_SCROLL_HEIGHT,
-  PROBLEM_SCROLL_SCRUB,
+  getProblemScrollHeight,
+  getProblemScrollScrub,
 } from "@/lib/problemScrollConstants";
 import { getProblemPanelTransform } from "@/lib/problemScrollMath";
 
@@ -78,7 +79,7 @@ function ProblemStepPanel({ step }: { step: ProblemStep }) {
           fill
           className="object-cover"
           sizes="(max-width: 1024px) 100vw, 720px"
-          priority={step.number === "01"}
+          loading="lazy"
         />
       </div>
     </div>
@@ -111,16 +112,28 @@ function applyPanelTransform(
   panel: HTMLElement,
   panelIndex: number,
   progress: number,
+  lite: boolean,
 ) {
-  const t = getProblemPanelTransform(panelIndex, progress, PROBLEM_PANEL_COUNT);
-  const content = panel.firstElementChild as HTMLElement | null;
+  const t = getProblemPanelTransform(
+    panelIndex,
+    progress,
+    PROBLEM_PANEL_COUNT,
+    lite,
+  );
 
   panel.style.opacity = String(t.opacity);
   panel.style.zIndex = String(t.zIndex);
   panel.style.pointerEvents = t.pointerEvents;
   panel.style.visibility = t.opacity < 0.001 ? "hidden" : "visible";
+
+  if (lite) {
+    panel.style.transform = `translate3d(0, ${t.translateY}px, 0)`;
+    return;
+  }
+
   panel.style.transform = `translate3d(0, ${t.translateY}px, ${t.translateZ}px) rotateX(${t.rotateX}deg) scale(${t.scale})`;
 
+  const content = panel.firstElementChild as HTMLElement | null;
   if (content) {
     content.style.transform = `translate3d(0, ${t.contentY}px, 0)`;
   }
@@ -130,6 +143,16 @@ export function ProblemScrollExperience() {
   const sectionRef = useRef<HTMLElement>(null);
   const panelsRef = useRef<(HTMLElement | null)[]>([]);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [scrollHeight, setScrollHeight] = useState(() =>
+    getProblemScrollHeight(false),
+  );
+  const [liteMotion, setLiteMotion] = useState(false);
+
+  useLayoutEffect(() => {
+    const mobile = isMobileDevice();
+    setScrollHeight(getProblemScrollHeight(mobile));
+    setLiteMotion(mobile);
+  }, []);
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -143,6 +166,8 @@ export function ProblemScrollExperience() {
 
     let ctx: gsap.Context | undefined;
     let refreshHandler: (() => void) | undefined;
+    const mobile = isMobileDevice();
+    const lite = mobile;
 
     const init = () => {
       const panels = panelsRef.current.filter(Boolean) as HTMLElement[];
@@ -150,7 +175,7 @@ export function ProblemScrollExperience() {
 
       const update = (progress: number) => {
         panels.forEach((panel, index) => {
-          applyPanelTransform(panel, index, progress);
+          applyPanelTransform(panel, index, progress, lite);
         });
       };
 
@@ -162,7 +187,8 @@ export function ProblemScrollExperience() {
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: PROBLEM_SCROLL_SCRUB,
+          scrub: getProblemScrollScrub(mobile),
+          fastScrollEnd: mobile,
           invalidateOnRefresh: true,
           onUpdate: (self) => update(self.progress),
         });
@@ -199,30 +225,34 @@ export function ProblemScrollExperience() {
     return <ProblemStaticFallback />;
   }
 
+  const panelClass = liteMotion
+    ? "absolute inset-0 overflow-hidden"
+    : "absolute inset-0 overflow-hidden [backface-visibility:hidden] [transform-style:preserve-3d]";
+
   return (
     <section
       ref={sectionRef}
       id="hvad-vi-goer"
       data-section="problem"
       className="relative bg-[#f1f1e9]"
-      style={{ height: PROBLEM_SCROLL_HEIGHT }}
+      style={{ height: scrollHeight }}
       aria-label="Problemet"
     >
       <div
         className="sticky top-0 h-[100dvh] overflow-hidden bg-[#f1f1e9]"
-        style={{ perspective: "1400px" }}
+        style={liteMotion ? undefined : { perspective: "1400px" }}
       >
         <div
           className="relative h-full w-full"
-          style={{ transformStyle: "preserve-3d" }}
+          style={liteMotion ? undefined : { transformStyle: "preserve-3d" }}
         >
           <article
             ref={(el) => {
               panelsRef.current[0] = el;
             }}
-            className="absolute inset-0 overflow-hidden will-change-transform [backface-visibility:hidden] [transform-style:preserve-3d]"
+            className={panelClass}
           >
-            <div className="vintage-paper-section h-full w-full will-change-transform">
+            <div className="vintage-paper-section h-full w-full">
               <ProblemIntroPanel />
             </div>
           </article>
@@ -233,9 +263,9 @@ export function ProblemScrollExperience() {
               ref={(el) => {
                 panelsRef.current[index + 1] = el;
               }}
-              className="absolute inset-0 overflow-hidden opacity-0 invisible will-change-transform [backface-visibility:hidden] [transform-style:preserve-3d]"
+              className={`${panelClass} opacity-0 invisible`}
             >
-              <div className="vintage-paper-section h-full w-full will-change-transform">
+              <div className="vintage-paper-section h-full w-full">
                 <ProblemStepPanel step={step} />
               </div>
             </article>

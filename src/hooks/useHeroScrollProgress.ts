@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { HERO_SCROLL_SCRUB } from "@/lib/heroScrollConstants";
+import { getHeroScrollScrub } from "@/lib/heroScrollConstants";
+import { isMobileDevice } from "@/lib/isMobileDevice";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -77,11 +78,14 @@ export function useHeroScrollProgress(sectionRef: React.RefObject<HTMLElement | 
       return;
     }
 
+    const mobile = isMobileDevice();
+
     const trigger = ScrollTrigger.create({
       trigger: section,
       start: "top top",
       end: "bottom bottom",
-      scrub: HERO_SCROLL_SCRUB,
+      scrub: getHeroScrollScrub(mobile),
+      fastScrollEnd: mobile,
       onUpdate: (self) => setTimeline(getHeroTimeline(self.progress)),
     });
 

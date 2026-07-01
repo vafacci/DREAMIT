@@ -1,5 +1,5 @@
 import Image from "next/image";
-import logoSymbol from "@/assets/logo-symbol.png";
+import logoSymbol from "@/assets/logo-symbol.webp";
 
 type HeroLogoScrollProps = {
   progress: number;
@@ -15,8 +15,8 @@ export function HeroLogoScroll({ progress }: HeroLogoScrollProps) {
         src={logoSymbol}
         alt=""
         priority
-        sizes="(max-width: 768px) 90vw, 480px"
-        className="h-auto w-[min(88vw,480px)] max-w-none select-none"
+        sizes="(max-width: 768px) 70vw, 480px"
+        className="h-auto w-[min(70vw,480px)] max-w-none select-none"
         style={{
           transform: `scale(${scale})`,
           opacity: imageOpacity,

@@ -4,7 +4,7 @@ export const PROBLEM_HEADER = {
   subtitle:
     "Du elsker det, du laver. Men vejen fra hobby til rigtig forretning kan føles som en jungle — navn, logo, shop og salg på én gang.",
   image: {
-    src: "/carousel/problem-intro.png",
+    src: "/carousel/problem-intro.jpg",
     alt: "Person der læser magasin — overvældet af valg",
   },
 } as const;

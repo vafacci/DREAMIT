@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HeroLogoScroll } from "@/components/hero/HeroLogoScroll";
 import { Button } from "@/components/ui/Button";
 import {
@@ -9,14 +9,20 @@ import {
   CTA_SECONDARY,
   CTA_SECONDARY_HREF,
 } from "@/lib/constants";
-import {
-  HERO_SCROLL_HEIGHT,
-  useHeroScrollProgress,
-} from "@/hooks/useHeroScrollProgress";
+import { getHeroScrollHeight } from "@/lib/heroScrollConstants";
+import { isMobileDevice } from "@/lib/isMobileDevice";
+import { useHeroScrollProgress } from "@/hooks/useHeroScrollProgress";
 
 export function HeroScrollExperience() {
   const sectionRef = useRef<HTMLElement>(null);
   const t = useHeroScrollProgress(sectionRef);
+  const [scrollHeight, setScrollHeight] = useState(() =>
+    getHeroScrollHeight(false),
+  );
+
+  useEffect(() => {
+    setScrollHeight(getHeroScrollHeight(isMobileDevice()));
+  }, []);
 
   const introInteractive = t.introOpacity > 0.15;
 
@@ -25,7 +31,7 @@ export function HeroScrollExperience() {
       ref={sectionRef}
       data-section="hero"
       className="relative bg-black"
-      style={{ height: HERO_SCROLL_HEIGHT }}
+      style={{ height: scrollHeight }}
       aria-label="Intro"
     >
       <div className="sticky top-0 h-[100dvh] overflow-hidden bg-black">
