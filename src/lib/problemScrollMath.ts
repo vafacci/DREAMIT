@@ -50,11 +50,10 @@ export function getProblemPanelTransform(
 
   if (distance < 0) {
     const e = smoothEase(distance + 1);
-    const lift = 1 - e;
     if (lite) {
-      translateY = lift * 18;
       opacity = e;
     } else {
+      const lift = 1 - e;
       rotateX = lift * 7;
       translateY = lift * 14;
       translateZ = lift * -55;
@@ -65,7 +64,6 @@ export function getProblemPanelTransform(
   } else {
     const e = smoothEase(distance);
     if (lite) {
-      translateY = -e * 18;
       opacity = 1 - e;
     } else {
       rotateX = -e * 7;

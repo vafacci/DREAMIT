@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { HeroLogoScroll } from "@/components/hero/HeroLogoScroll";
+import Image from "next/image";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import logoSymbol from "@/assets/logo-symbol.webp";
 import { Button } from "@/components/ui/Button";
 import {
   CTA_PRIMARY,
@@ -9,13 +12,21 @@ import {
   CTA_SECONDARY,
   CTA_SECONDARY_HREF,
 } from "@/lib/constants";
-import { getHeroScrollHeight } from "@/lib/heroScrollConstants";
+import { ensureGsapScroll } from "@/lib/gsapScroll";
+import {
+  getHeroScrollHeight,
+  getHeroScrollScrub,
+} from "@/lib/heroScrollConstants";
+import { getHeroTimeline } from "@/lib/heroScrollMath";
 import { isMobileDevice } from "@/lib/isMobileDevice";
-import { useHeroScrollProgress } from "@/hooks/useHeroScrollProgress";
 
 export function HeroScrollExperience() {
   const sectionRef = useRef<HTMLElement>(null);
-  const t = useHeroScrollProgress(sectionRef);
+  const logoSceneRef = useRef<HTMLDivElement>(null);
+  const logoImgRef = useRef<HTMLImageElement>(null);
+  const introRef = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
+  const hintRef = useRef<HTMLDivElement>(null);
   const [scrollHeight, setScrollHeight] = useState(() =>
     getHeroScrollHeight(false),
   );
@@ -24,7 +35,81 @@ export function HeroScrollExperience() {
     setScrollHeight(getHeroScrollHeight(isMobileDevice()));
   }, []);
 
-  const introInteractive = t.introOpacity > 0.15;
+  useLayoutEffect(() => {
+    const section = sectionRef.current;
+    const logoScene = logoSceneRef.current;
+    const intro = introRef.current;
+    if (!section || !logoScene || !intro) return;
+
+    ensureGsapScroll();
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      const end = getHeroTimeline(1);
+      logoScene.style.opacity = String(end.logoSceneOpacity);
+      intro.style.opacity = String(end.introOpacity);
+      intro.style.transform = `translate3d(0, ${end.introY}px, 0)`;
+      return;
+    }
+
+    const mobile = isMobileDevice();
+    const setLogoSceneOpacity = gsap.quickSetter(logoScene, "opacity");
+    const setIntroOpacity = gsap.quickSetter(intro, "opacity");
+    const setIntroY = gsap.quickSetter(intro, "y", "px");
+    const setGlowOpacity = glowRef.current
+      ? gsap.quickSetter(glowRef.current, "opacity")
+      : null;
+    const setHintOpacity = hintRef.current
+      ? gsap.quickSetter(hintRef.current, "opacity")
+      : null;
+    const setLogoScale = logoImgRef.current
+      ? gsap.quickSetter(logoImgRef.current, "scale")
+      : null;
+    const setLogoOpacity = logoImgRef.current
+      ? gsap.quickSetter(logoImgRef.current, "opacity")
+      : null;
+
+    if (logoImgRef.current) {
+      gsap.set(logoImgRef.current, { force3D: true, transformOrigin: "50% 50%" });
+    }
+
+    gsap.set(intro, { force3D: true });
+
+    let introInteractive = true;
+
+    const update = (progress: number) => {
+      const t = getHeroTimeline(progress);
+      setLogoSceneOpacity(t.logoSceneOpacity);
+      setIntroOpacity(t.introOpacity);
+      setIntroY(t.introY);
+      if (setGlowOpacity) setGlowOpacity(t.accentGlowOpacity);
+      if (setHintOpacity) setHintOpacity(t.scrollHintOpacity);
+      if (setLogoScale) setLogoScale(0.7 + t.cameraProgress * 0.95);
+      if (setLogoOpacity) setLogoOpacity(0.5 + t.cameraProgress * 0.5);
+
+      const interactive = t.introOpacity > 0.15;
+      if (interactive !== introInteractive) {
+        introInteractive = interactive;
+        intro.style.pointerEvents = interactive ? "auto" : "none";
+      }
+    };
+
+    const ctx = gsap.context(() => {
+      ScrollTrigger.create({
+        trigger: section,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: getHeroScrollScrub(mobile),
+        fastScrollEnd: mobile,
+        anticipatePin: 1,
+        onUpdate: (self) => update(self.progress),
+      });
+    }, section);
+
+    update(0);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
     <section
@@ -34,27 +119,29 @@ export function HeroScrollExperience() {
       style={{ height: scrollHeight }}
       aria-label="Intro"
     >
-      <div className="sticky top-0 h-[100dvh] overflow-hidden bg-black">
-        <div
-          className="absolute inset-0 z-10"
-          style={{ opacity: t.logoSceneOpacity }}
-        >
-          <HeroLogoScroll progress={t.cameraProgress} />
+      <div className="sticky top-0 h-[100dvh] overflow-hidden bg-black [contain:layout_paint] [transform:translateZ(0)]">
+        <div ref={logoSceneRef} className="absolute inset-0 z-10">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black">
+            <Image
+              ref={logoImgRef}
+              src={logoSymbol}
+              alt=""
+              priority
+              sizes="(max-width: 768px) 70vw, 480px"
+              className="h-auto w-[min(70vw,480px)] max-w-none select-none"
+            />
+          </div>
         </div>
 
         <div
+          ref={glowRef}
           className="pointer-events-none absolute inset-0 z-[15] bg-gradient-to-br from-brand/10 via-transparent to-transparent"
-          style={{ opacity: t.accentGlowOpacity }}
           aria-hidden="true"
         />
 
         <div
+          ref={introRef}
           className="absolute inset-0 z-20 flex items-center justify-center px-5"
-          style={{
-            opacity: t.introOpacity,
-            transform: `translateY(${t.introY}px)`,
-            pointerEvents: introInteractive ? "auto" : "none",
-          }}
         >
           <div className="container-site flex max-w-lg flex-col items-center text-center">
             <h1 className="text-h1-mobile lg:text-h1-desktop mb-6 tracking-[0.02em] text-white">
@@ -84,8 +171,8 @@ export function HeroScrollExperience() {
         </div>
 
         <div
+          ref={hintRef}
           className="absolute bottom-8 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-2"
-          style={{ opacity: t.scrollHintOpacity }}
         >
           <span className="text-[11px] uppercase tracking-[0.2em] text-white/50">
             Scroll

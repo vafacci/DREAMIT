@@ -10,6 +10,7 @@ import {
   PROBLEM_STEPS,
   type ProblemStep,
 } from "@/lib/problemContent";
+import { ensureGsapScroll } from "@/lib/gsapScroll";
 import { isMobileDevice } from "@/lib/isMobileDevice";
 import {
   PROBLEM_PANEL_COUNT,
@@ -18,7 +19,11 @@ import {
 } from "@/lib/problemScrollConstants";
 import { getProblemPanelTransform } from "@/lib/problemScrollMath";
 
-gsap.registerPlugin(ScrollTrigger);
+type PanelSetters = {
+  opacity: ReturnType<typeof gsap.quickSetter>;
+  transform: ReturnType<typeof gsap.quickSetter>;
+  element: HTMLElement;
+};
 
 function ProblemIntroPanel({ fillViewport = true }: { fillViewport?: boolean }) {
   return (
@@ -109,7 +114,7 @@ function ProblemStaticFallback() {
 }
 
 function applyPanelTransform(
-  panel: HTMLElement,
+  setters: PanelSetters,
   panelIndex: number,
   progress: number,
   lite: boolean,
@@ -121,19 +126,21 @@ function applyPanelTransform(
     lite,
   );
 
-  panel.style.opacity = String(t.opacity);
-  panel.style.zIndex = String(t.zIndex);
-  panel.style.pointerEvents = t.pointerEvents;
-  panel.style.visibility = t.opacity < 0.001 ? "hidden" : "visible";
+  setters.opacity(t.opacity);
+  setters.element.style.zIndex = String(t.zIndex);
+  setters.element.style.pointerEvents = t.pointerEvents;
+  setters.element.style.visibility = t.opacity < 0.001 ? "hidden" : "visible";
 
   if (lite) {
-    panel.style.transform = `translate3d(0, ${t.translateY}px, 0)`;
+    setters.transform("none");
     return;
   }
 
-  panel.style.transform = `translate3d(0, ${t.translateY}px, ${t.translateZ}px) rotateX(${t.rotateX}deg) scale(${t.scale})`;
+  setters.transform(
+    `translate3d(0, ${t.translateY}px, ${t.translateZ}px) rotateX(${t.rotateX}deg) scale(${t.scale})`,
+  );
 
-  const content = panel.firstElementChild as HTMLElement | null;
+  const content = setters.element.firstElementChild as HTMLElement | null;
   if (content) {
     content.style.transform = `translate3d(0, ${t.contentY}px, 0)`;
   }
@@ -164,6 +171,8 @@ export function ProblemScrollExperience() {
       return;
     }
 
+    ensureGsapScroll();
+
     let ctx: gsap.Context | undefined;
     let refreshHandler: (() => void) | undefined;
     const mobile = isMobileDevice();
@@ -173,9 +182,18 @@ export function ProblemScrollExperience() {
       const panels = panelsRef.current.filter(Boolean) as HTMLElement[];
       if (panels.length !== PROBLEM_PANEL_COUNT) return false;
 
+      const setters: PanelSetters[] = panels.map((panel) => {
+        gsap.set(panel, { force3D: true });
+        return {
+          element: panel,
+          opacity: gsap.quickSetter(panel, "opacity"),
+          transform: gsap.quickSetter(panel, "transform"),
+        };
+      });
+
       const update = (progress: number) => {
-        panels.forEach((panel, index) => {
-          applyPanelTransform(panel, index, progress, lite);
+        setters.forEach((setter, index) => {
+          applyPanelTransform(setter, index, progress, lite);
         });
       };
 
@@ -189,6 +207,7 @@ export function ProblemScrollExperience() {
           end: "bottom bottom",
           scrub: getProblemScrollScrub(mobile),
           fastScrollEnd: mobile,
+          anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => update(self.progress),
         });
@@ -239,7 +258,7 @@ export function ProblemScrollExperience() {
       aria-label="Problemet"
     >
       <div
-        className="sticky top-0 h-[100dvh] overflow-hidden bg-[#f1f1e9]"
+        className="sticky top-0 h-[100dvh] overflow-hidden bg-[#f1f1e9] [contain:layout_paint] [transform:translateZ(0)]"
         style={liteMotion ? undefined : { perspective: "1400px" }}
       >
         <div

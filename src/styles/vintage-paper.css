@@ -69,4 +69,20 @@
     position: relative;
     z-index: 1;
   }
+
+  @media (max-width: 1023px) {
+    .vintage-paper-section {
+      background-image: linear-gradient(
+        162deg,
+        var(--vintage-paper-highlight) 0%,
+        var(--vintage-paper-base) 50%,
+        var(--vintage-paper-cool) 100%
+      );
+    }
+
+    .vintage-paper-section::before,
+    .vintage-paper-section::after {
+      display: none;
+    }
+  }
 }
