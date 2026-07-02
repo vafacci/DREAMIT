@@ -2,15 +2,13 @@
 
 import Image from "next/image";
 import { useLayoutEffect, useRef, useState } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import {
   PROBLEM_HEADER,
   PROBLEM_STEPS,
   type ProblemStep,
 } from "@/lib/problemContent";
-import { bindScrollTriggerRefresh, ensureGsapScroll } from "@/lib/gsapScroll";
+import { bindScrollTriggerRefresh, loadGsapScroll } from "@/lib/gsapScroll";
 import { isMobileDevice } from "@/lib/isMobileDevice";
 import {
   PROBLEM_PANEL_COUNT,
@@ -20,12 +18,55 @@ import {
 import { getProblemPanelTransform } from "@/lib/problemScrollMath";
 
 type PanelSetters = {
-  opacity: ReturnType<typeof gsap.quickSetter>;
-  transform: ReturnType<typeof gsap.quickSetter>;
+  opacity: (value: number) => void;
+  transform: (value: string) => void;
   element: HTMLElement;
 };
 
-function ProblemIntroPanel({ fillViewport = true }: { fillViewport?: boolean }) {
+const imageFrameClass =
+  "relative mt-2 min-h-[42dvh] w-full flex-1 sm:min-h-[44dvh] lg:min-h-[48dvh]";
+
+function ProblemImageFrame({
+  showImage,
+  src,
+  alt,
+  priority = false,
+  imageClassName = "object-cover object-bottom",
+}: {
+  showImage: boolean;
+  src: string;
+  alt: string;
+  priority?: boolean;
+  imageClassName?: string;
+}) {
+  if (!showImage) {
+    return <div className={imageFrameClass} aria-hidden="true" />;
+  }
+
+  return (
+    <div className={imageFrameClass}>
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        className={imageClassName}
+        sizes="(max-width: 1024px) 100vw, 720px"
+        priority={priority}
+        loading={priority ? undefined : "lazy"}
+      />
+    </div>
+  );
+}
+
+function ProblemIntroPanel({
+  fillViewport = true,
+  showImage = true,
+  priorityImage = false,
+}: {
+  fillViewport?: boolean;
+  showImage?: boolean;
+  priorityImage?: boolean;
+}) {
   return (
     <div
       className={
@@ -42,27 +83,23 @@ function ProblemIntroPanel({ fillViewport = true }: { fillViewport?: boolean }) 
         />
       </div>
 
-      <div
-        className={
-          fillViewport
-            ? "relative mt-2 min-h-[42dvh] w-full flex-1 sm:min-h-[44dvh] lg:min-h-[48dvh]"
-            : "relative mt-2 aspect-[4/5] w-full sm:aspect-[3/4]"
-        }
-      >
-        <Image
-          src={PROBLEM_HEADER.image.src}
-          alt={PROBLEM_HEADER.image.alt}
-          fill
-          className="object-cover object-bottom"
-          sizes="(max-width: 1024px) 100vw, 720px"
-          priority
-        />
-      </div>
+      <ProblemImageFrame
+        showImage={showImage}
+        src={PROBLEM_HEADER.image.src}
+        alt={PROBLEM_HEADER.image.alt}
+        priority={priorityImage}
+      />
     </div>
   );
 }
 
-function ProblemStepPanel({ step }: { step: ProblemStep }) {
+function ProblemStepPanel({
+  step,
+  showImage = true,
+}: {
+  step: ProblemStep;
+  showImage?: boolean;
+}) {
   return (
     <div className="container-site flex h-full flex-col pt-20 pb-8 lg:pt-24 lg:pb-10">
       <div className="mb-4 flex shrink-0 items-baseline justify-between gap-4 lg:mb-5">
@@ -77,16 +114,12 @@ function ProblemStepPanel({ step }: { step: ProblemStep }) {
         </span>
       </div>
 
-      <div className="relative mt-2 min-h-[42dvh] w-full flex-1 sm:min-h-[44dvh] lg:min-h-[48dvh]">
-        <Image
-          src={step.image.src}
-          alt={step.image.alt}
-          fill
-          className="object-cover"
-          sizes="(max-width: 1024px) 100vw, 720px"
-          loading="lazy"
-        />
-      </div>
+      <ProblemImageFrame
+        showImage={showImage}
+        src={step.image.src}
+        alt={step.image.alt}
+        imageClassName="object-cover"
+      />
     </div>
   );
 }
@@ -149,11 +182,13 @@ function applyPanelTransform(
 export function ProblemScrollExperience() {
   const sectionRef = useRef<HTMLElement>(null);
   const panelsRef = useRef<(HTMLElement | null)[]>([]);
+  const activeImageRef = useRef(0);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [scrollHeight, setScrollHeight] = useState(() =>
     getProblemScrollHeight(false),
   );
   const [liteMotion, setLiteMotion] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -171,72 +206,88 @@ export function ProblemScrollExperience() {
       return;
     }
 
-    ensureGsapScroll();
-
-    let ctx: gsap.Context | undefined;
+    let cancelled = false;
+    let ctx: { revert: () => void } | undefined;
     let unbindRefresh: (() => void) | undefined;
     let rafId = 0;
     let attempts = 0;
-    const lite = mobile;
 
-    const init = () => {
-      const panels = panelsRef.current.filter(Boolean) as HTMLElement[];
-      if (panels.length !== PROBLEM_PANEL_COUNT) return false;
+    void loadGsapScroll().then(({ gsap, ScrollTrigger }) => {
+      if (cancelled) return;
 
-      const setters: PanelSetters[] = panels.map((panel) => {
-        gsap.set(panel, { force3D: !lite });
-        return {
-          element: panel,
-          opacity: gsap.quickSetter(panel, "opacity"),
-          transform: gsap.quickSetter(panel, "transform"),
+      const lite = mobile;
+
+      const init = () => {
+        const panels = panelsRef.current.filter(Boolean) as HTMLElement[];
+        if (panels.length !== PROBLEM_PANEL_COUNT) return false;
+
+        const setters = panels.map((panel) => {
+          gsap.set(panel, { force3D: !lite });
+          return {
+            element: panel,
+            opacity: gsap.quickSetter(panel, "opacity") as (value: number) => void,
+            transform: gsap.quickSetter(panel, "transform") as (value: string) => void,
+          };
+        }) satisfies PanelSetters[];
+
+        const update = (progress: number) => {
+          setters.forEach((setter, index) => {
+            applyPanelTransform(setter, index, progress, lite);
+          });
+
+          if (lite) {
+            const nextIndex = Math.min(
+              PROBLEM_PANEL_COUNT - 1,
+              Math.max(0, Math.round(progress * (PROBLEM_PANEL_COUNT - 1))),
+            );
+            if (nextIndex !== activeImageRef.current) {
+              activeImageRef.current = nextIndex;
+              setActiveImageIndex(nextIndex);
+            }
+          }
         };
-      });
 
-      const update = (progress: number) => {
-        setters.forEach((setter, index) => {
-          applyPanelTransform(setter, index, progress, lite);
-        });
+        update(0);
+
+        ctx = gsap.context(() => {
+          ScrollTrigger.create({
+            id: "problem-scroll",
+            trigger: section,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: getProblemScrollScrub(mobile),
+            fastScrollEnd: mobile,
+            anticipatePin: 0,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => update(self.progress),
+          });
+        }, section);
+
+        const refresh = () => {
+          ScrollTrigger.refresh();
+          const trigger = ScrollTrigger.getById("problem-scroll");
+          if (trigger) update(trigger.progress);
+        };
+
+        refresh();
+        unbindRefresh = bindScrollTriggerRefresh(refresh, mobile);
+        return true;
       };
 
-      update(0);
-
-      ctx = gsap.context(() => {
-        ScrollTrigger.create({
-          id: "problem-scroll",
-          trigger: section,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: getProblemScrollScrub(mobile),
-          fastScrollEnd: mobile,
-          anticipatePin: mobile ? 0 : 1,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => update(self.progress),
-        });
-      }, section);
-
-      const refresh = () => {
-        ScrollTrigger.refresh();
-        const trigger = ScrollTrigger.getById("problem-scroll");
-        if (trigger) update(trigger.progress);
+      const tryInit = () => {
+        attempts += 1;
+        if (init() || attempts >= 60) {
+          cancelAnimationFrame(rafId);
+          return;
+        }
+        rafId = requestAnimationFrame(tryInit);
       };
 
-      refresh();
-      unbindRefresh = bindScrollTriggerRefresh(refresh, mobile);
-      return true;
-    };
-
-    const tryInit = () => {
-      attempts += 1;
-      if (init() || attempts >= 60) {
-        cancelAnimationFrame(rafId);
-        return;
-      }
-      rafId = requestAnimationFrame(tryInit);
-    };
-
-    tryInit();
+      tryInit();
+    });
 
     return () => {
+      cancelled = true;
       cancelAnimationFrame(rafId);
       unbindRefresh?.();
       ctx?.revert();
@@ -275,7 +326,10 @@ export function ProblemScrollExperience() {
             className={panelClass}
           >
             <div className="vintage-paper-section h-full w-full">
-              <ProblemIntroPanel />
+              <ProblemIntroPanel
+                showImage={!liteMotion || activeImageIndex === 0}
+                priorityImage={!liteMotion}
+              />
             </div>
           </article>
 
@@ -288,7 +342,10 @@ export function ProblemScrollExperience() {
               className={`${panelClass} opacity-0 invisible`}
             >
               <div className="vintage-paper-section h-full w-full">
-                <ProblemStepPanel step={step} />
+                <ProblemStepPanel
+                  step={step}
+                  showImage={!liteMotion || activeImageIndex === index + 1}
+                />
               </div>
             </article>
           ))}

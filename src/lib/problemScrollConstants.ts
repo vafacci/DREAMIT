@@ -4,7 +4,7 @@ import { PROBLEM_STEPS } from "@/lib/problemContent";
 export const PROBLEM_PANEL_COUNT = 1 + PROBLEM_STEPS.length;
 
 const PANEL_GAP_DESKTOP_VH = 130;
-const PANEL_GAP_MOBILE_VH = 95;
+const PANEL_GAP_MOBILE_VH = 72;
 
 export function getProblemScrollHeight(mobile = false) {
   const gap = mobile ? PANEL_GAP_MOBILE_VH : PANEL_GAP_DESKTOP_VH;
@@ -12,9 +12,9 @@ export function getProblemScrollHeight(mobile = false) {
 }
 
 export const PROBLEM_SCROLL_SCRUB_DESKTOP = 0.35;
-export const PROBLEM_SCROLL_SCRUB_MOBILE = true;
+export const PROBLEM_SCROLL_SCRUB_MOBILE = 0.4;
 
-export function getProblemScrollScrub(mobile = false): number | boolean {
+export function getProblemScrollScrub(mobile = false): number {
   return mobile ? PROBLEM_SCROLL_SCRUB_MOBILE : PROBLEM_SCROLL_SCRUB_DESKTOP;
 }
 

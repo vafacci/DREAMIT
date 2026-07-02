@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { getHeroScrollScrub } from "@/lib/heroScrollConstants";
 import {
   getHeroTimeline,
   type HeroTimeline,
 } from "@/lib/heroScrollMath";
-import { ensureGsapScroll } from "@/lib/gsapScroll";
+import { bindScrollTriggerRefresh, loadGsapScroll } from "@/lib/gsapScroll";
 import { isMobileDevice } from "@/lib/isMobileDevice";
 
 export {
@@ -29,32 +27,37 @@ export function useHeroScrollProgress(sectionRef: React.RefObject<HTMLElement | 
     const section = sectionRef.current;
     if (!section) return;
 
-    ensureGsapScroll();
+    let cancelled = false;
+    let unbindRefresh: (() => void) | undefined;
+    let trigger: { kill: () => void } | undefined;
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    void loadGsapScroll().then(({ gsap, ScrollTrigger }) => {
+      if (cancelled) return;
 
-    if (reducedMotion) {
-      setTimeline(getHeroTimeline(1));
-      return;
-    }
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reducedMotion) {
+        setTimeline(getHeroTimeline(1));
+        return;
+      }
 
-    const mobile = isMobileDevice();
+      const mobile = isMobileDevice();
 
-    const trigger = ScrollTrigger.create({
-      trigger: section,
-      start: "top top",
-      end: "bottom bottom",
-      scrub: getHeroScrollScrub(mobile),
-      onUpdate: (self) => setTimeline(getHeroTimeline(self.progress)),
+      trigger = ScrollTrigger.create({
+        trigger: section,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: getHeroScrollScrub(mobile),
+        onUpdate: (self) => setTimeline(getHeroTimeline(self.progress)),
+      });
+
+      const refresh = () => ScrollTrigger.refresh();
+      unbindRefresh = bindScrollTriggerRefresh(refresh, mobile);
     });
 
-    const onResize = () => ScrollTrigger.refresh();
-
-    window.addEventListener("resize", onResize);
-
     return () => {
-      trigger.kill();
-      window.removeEventListener("resize", onResize);
+      cancelled = true;
+      trigger?.kill();
+      unbindRefresh?.();
     };
   }, [sectionRef]);
 

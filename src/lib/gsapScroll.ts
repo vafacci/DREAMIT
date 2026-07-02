@@ -1,16 +1,34 @@
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import type { gsap as GsapNamespace } from "gsap";
+import type { ScrollTrigger as ScrollTriggerPlugin } from "gsap/ScrollTrigger";
 
-let configured = false;
+export type GsapRuntime = {
+  gsap: typeof GsapNamespace;
+  ScrollTrigger: typeof ScrollTriggerPlugin;
+};
 
-export function ensureGsapScroll() {
-  if (configured) return;
-  gsap.registerPlugin(ScrollTrigger);
-  ScrollTrigger.config({
-    limitCallbacks: true,
-    ignoreMobileResize: true,
-  });
-  configured = true;
+let runtime: GsapRuntime | null = null;
+let loading: Promise<GsapRuntime> | null = null;
+
+/** Lazy-load GSAP + ScrollTrigger on first scroll experience mount. */
+export function loadGsapScroll(): Promise<GsapRuntime> {
+  if (runtime) return Promise.resolve(runtime);
+  if (loading) return loading;
+
+  loading = Promise.all([import("gsap"), import("gsap/ScrollTrigger")]).then(
+    ([gsapModule, scrollTriggerModule]) => {
+      const gsap = gsapModule.default;
+      const ScrollTrigger = scrollTriggerModule.ScrollTrigger;
+      gsap.registerPlugin(ScrollTrigger);
+      ScrollTrigger.config({
+        limitCallbacks: true,
+        ignoreMobileResize: true,
+      });
+      runtime = { gsap, ScrollTrigger };
+      return runtime;
+    },
+  );
+
+  return loading;
 }
 
 /** Refresh ScrollTrigger without mobile address-bar resize storms. */

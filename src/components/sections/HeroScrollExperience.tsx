@@ -2,8 +2,6 @@
 
 import Image from "next/image";
 import { useLayoutEffect, useRef, useState } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import logoSymbol from "@/assets/logo-symbol.webp";
 import { Button } from "@/components/ui/Button";
 import {
@@ -12,7 +10,7 @@ import {
   CTA_SECONDARY,
   CTA_SECONDARY_HREF,
 } from "@/lib/constants";
-import { bindScrollTriggerRefresh, ensureGsapScroll } from "@/lib/gsapScroll";
+import { bindScrollTriggerRefresh, loadGsapScroll } from "@/lib/gsapScroll";
 import {
   getHeroScrollHeight,
   getHeroScrollScrub,
@@ -42,8 +40,6 @@ export function HeroScrollExperience() {
     setScrollHeight(height);
     section.style.height = height;
 
-    ensureGsapScroll();
-
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
       const end = getHeroTimeline(1);
@@ -53,76 +49,87 @@ export function HeroScrollExperience() {
       return;
     }
 
-    const setLogoSceneOpacity = gsap.quickSetter(logoScene, "opacity");
-    const setIntroOpacity = gsap.quickSetter(intro, "opacity");
-    const setIntroY = gsap.quickSetter(intro, "y", "px");
-    const setGlowOpacity = glowRef.current
-      ? gsap.quickSetter(glowRef.current, "opacity")
-      : null;
-    const setHintOpacity = hintRef.current
-      ? gsap.quickSetter(hintRef.current, "opacity")
-      : null;
-    const setLogoScale = logoImgRef.current
-      ? gsap.quickSetter(logoImgRef.current, "scale")
-      : null;
-    const setLogoOpacity = logoImgRef.current
-      ? gsap.quickSetter(logoImgRef.current, "opacity")
-      : null;
+    let cancelled = false;
+    let ctx: { revert: () => void } | undefined;
+    let unbindRefresh: (() => void) | undefined;
 
-    if (logoImgRef.current) {
-      gsap.set(logoImgRef.current, { force3D: true, transformOrigin: "50% 50%" });
-    }
+    void loadGsapScroll().then(({ gsap, ScrollTrigger }) => {
+      if (cancelled) return;
 
-    gsap.set(intro, { force3D: true });
+      const setLogoSceneOpacity = gsap.quickSetter(logoScene, "opacity");
+      const setIntroOpacity = gsap.quickSetter(intro, "opacity");
+      const setIntroY = gsap.quickSetter(intro, "y", "px");
+      const setGlowOpacity = glowRef.current
+        ? gsap.quickSetter(glowRef.current, "opacity")
+        : null;
+      const setHintOpacity = hintRef.current
+        ? gsap.quickSetter(hintRef.current, "opacity")
+        : null;
+      const setLogoScale =
+        !mobile && logoImgRef.current
+          ? gsap.quickSetter(logoImgRef.current, "scale")
+          : null;
+      const setLogoOpacity = logoImgRef.current
+        ? gsap.quickSetter(logoImgRef.current, "opacity")
+        : null;
 
-    let introInteractive = true;
-
-    const update = (progress: number) => {
-      const t = getHeroTimeline(progress);
-      setLogoSceneOpacity(t.logoSceneOpacity);
-      setIntroOpacity(t.introOpacity);
-      setIntroY(t.introY);
-      if (setGlowOpacity) setGlowOpacity(t.accentGlowOpacity);
-      if (setHintOpacity) setHintOpacity(t.scrollHintOpacity);
-      if (setLogoScale) setLogoScale(0.7 + t.cameraProgress * 0.95);
-      if (setLogoOpacity) setLogoOpacity(0.5 + t.cameraProgress * 0.5);
-
-      const interactive = t.introOpacity > 0.15;
-      if (interactive !== introInteractive) {
-        introInteractive = interactive;
-        intro.style.pointerEvents = interactive ? "auto" : "none";
+      if (logoImgRef.current && !mobile) {
+        gsap.set(logoImgRef.current, {
+          force3D: true,
+          transformOrigin: "50% 50%",
+        });
       }
-    };
 
-    let ctx: gsap.Context | undefined;
+      gsap.set(intro, { force3D: !mobile });
 
-    ctx = gsap.context(() => {
-      ScrollTrigger.create({
-        id: "hero-scroll",
-        trigger: section,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: getHeroScrollScrub(mobile),
-        fastScrollEnd: mobile,
-        anticipatePin: mobile ? 0 : 1,
-        invalidateOnRefresh: true,
-        onUpdate: (self) => update(self.progress),
-      });
-    }, section);
+      let introInteractive = true;
 
-    update(0);
+      const update = (progress: number) => {
+        const t = getHeroTimeline(progress);
+        setLogoSceneOpacity(t.logoSceneOpacity);
+        setIntroOpacity(t.introOpacity);
+        setIntroY(t.introY);
+        if (setGlowOpacity) setGlowOpacity(t.accentGlowOpacity);
+        if (setHintOpacity) setHintOpacity(t.scrollHintOpacity);
+        if (setLogoScale) setLogoScale(0.7 + t.cameraProgress * 0.95);
+        if (setLogoOpacity) setLogoOpacity(0.5 + t.cameraProgress * 0.5);
 
-    const refresh = () => {
-      ScrollTrigger.refresh();
-      const trigger = ScrollTrigger.getById("hero-scroll");
-      if (trigger) update(trigger.progress);
-    };
+        const interactive = t.introOpacity > 0.15;
+        if (interactive !== introInteractive) {
+          introInteractive = interactive;
+          intro.style.pointerEvents = interactive ? "auto" : "none";
+        }
+      };
 
-    refresh();
-    const unbindRefresh = bindScrollTriggerRefresh(refresh, mobile);
+      ctx = gsap.context(() => {
+        ScrollTrigger.create({
+          id: "hero-scroll",
+          trigger: section,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: getHeroScrollScrub(mobile),
+          fastScrollEnd: mobile,
+          anticipatePin: 0,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => update(self.progress),
+        });
+      }, section);
+
+      update(0);
+
+      const refresh = () => {
+        ScrollTrigger.refresh();
+        const trigger = ScrollTrigger.getById("hero-scroll");
+        if (trigger) update(trigger.progress);
+      };
+
+      refresh();
+      unbindRefresh = bindScrollTriggerRefresh(refresh, mobile);
+    });
 
     return () => {
-      unbindRefresh();
+      cancelled = true;
+      unbindRefresh?.();
       ctx?.revert();
     };
   }, []);
