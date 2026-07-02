@@ -10,7 +10,7 @@ import {
   PROBLEM_STEPS,
   type ProblemStep,
 } from "@/lib/problemContent";
-import { ensureGsapScroll } from "@/lib/gsapScroll";
+import { bindScrollTriggerRefresh, ensureGsapScroll } from "@/lib/gsapScroll";
 import { isMobileDevice } from "@/lib/isMobileDevice";
 import {
   PROBLEM_PANEL_COUNT,
@@ -149,45 +149,42 @@ function applyPanelTransform(
 export function ProblemScrollExperience() {
   const sectionRef = useRef<HTMLElement>(null);
   const panelsRef = useRef<(HTMLElement | null)[]>([]);
-  const [enableScrollFx, setEnableScrollFx] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const [scrollHeight, setScrollHeight] = useState(() =>
     getProblemScrollHeight(false),
   );
+  const [liteMotion, setLiteMotion] = useState(false);
 
   useLayoutEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setEnableScrollFx(!isMobileDevice() && !reduced);
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!enableScrollFx) return;
-
     const section = sectionRef.current;
     if (!section) return;
 
-    const height = getProblemScrollHeight(false);
+    const mobile = isMobileDevice();
+    const height = getProblemScrollHeight(mobile);
     setScrollHeight(height);
+    setLiteMotion(mobile);
     section.style.height = height;
+
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (motionQuery.matches) {
+      setReducedMotion(true);
+      return;
+    }
 
     ensureGsapScroll();
 
     let ctx: gsap.Context | undefined;
-    let refreshHandler: (() => void) | undefined;
-    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+    let unbindRefresh: (() => void) | undefined;
     let rafId = 0;
     let attempts = 0;
-
-    const onResize = () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => refreshHandler?.(), 200);
-    };
+    const lite = mobile;
 
     const init = () => {
       const panels = panelsRef.current.filter(Boolean) as HTMLElement[];
       if (panels.length !== PROBLEM_PANEL_COUNT) return false;
 
       const setters: PanelSetters[] = panels.map((panel) => {
-        gsap.set(panel, { force3D: true });
+        gsap.set(panel, { force3D: !lite });
         return {
           element: panel,
           opacity: gsap.quickSetter(panel, "opacity"),
@@ -197,7 +194,7 @@ export function ProblemScrollExperience() {
 
       const update = (progress: number) => {
         setters.forEach((setter, index) => {
-          applyPanelTransform(setter, index, progress, false);
+          applyPanelTransform(setter, index, progress, lite);
         });
       };
 
@@ -209,23 +206,22 @@ export function ProblemScrollExperience() {
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: getProblemScrollScrub(false),
-          fastScrollEnd: false,
-          anticipatePin: 1,
+          scrub: getProblemScrollScrub(mobile),
+          fastScrollEnd: mobile,
+          anticipatePin: mobile ? 0 : 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => update(self.progress),
         });
       }, section);
 
-      refreshHandler = () => {
+      const refresh = () => {
         ScrollTrigger.refresh();
         const trigger = ScrollTrigger.getById("problem-scroll");
         if (trigger) update(trigger.progress);
       };
 
-      refreshHandler();
-      window.addEventListener("load", refreshHandler);
-      window.addEventListener("resize", onResize);
+      refresh();
+      unbindRefresh = bindScrollTriggerRefresh(refresh, mobile);
       return true;
     };
 
@@ -242,21 +238,18 @@ export function ProblemScrollExperience() {
 
     return () => {
       cancelAnimationFrame(rafId);
-      clearTimeout(resizeTimer);
-      if (refreshHandler) {
-        window.removeEventListener("load", refreshHandler);
-        window.removeEventListener("resize", onResize);
-      }
+      unbindRefresh?.();
       ctx?.revert();
     };
-  }, [enableScrollFx]);
+  }, []);
 
-  if (!enableScrollFx) {
+  if (reducedMotion) {
     return <ProblemStaticFallback />;
   }
 
-  const panelClass =
-    "absolute inset-0 overflow-hidden [backface-visibility:hidden] [transform-style:preserve-3d]";
+  const panelClass = liteMotion
+    ? "absolute inset-0 overflow-hidden"
+    : "absolute inset-0 overflow-hidden [backface-visibility:hidden] [transform-style:preserve-3d]";
 
   return (
     <section
@@ -269,11 +262,11 @@ export function ProblemScrollExperience() {
     >
       <div
         className="sticky top-0 h-[100dvh] overflow-hidden bg-[#f1f1e9] [contain:layout_paint] [transform:translateZ(0)]"
-        style={{ perspective: "1400px" }}
+        style={liteMotion ? undefined : { perspective: "1400px" }}
       >
         <div
           className="relative h-full w-full"
-          style={{ transformStyle: "preserve-3d" }}
+          style={liteMotion ? undefined : { transformStyle: "preserve-3d" }}
         >
           <article
             ref={(el) => {
