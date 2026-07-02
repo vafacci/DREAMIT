@@ -149,33 +149,38 @@ function applyPanelTransform(
 export function ProblemScrollExperience() {
   const sectionRef = useRef<HTMLElement>(null);
   const panelsRef = useRef<(HTMLElement | null)[]>([]);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const [enableScrollFx, setEnableScrollFx] = useState(false);
   const [scrollHeight, setScrollHeight] = useState(() =>
     getProblemScrollHeight(false),
   );
-  const [liteMotion, setLiteMotion] = useState(false);
 
   useLayoutEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setEnableScrollFx(!isMobileDevice() && !reduced);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!enableScrollFx) return;
+
     const section = sectionRef.current;
     if (!section) return;
 
-    const mobile = isMobileDevice();
-    const height = getProblemScrollHeight(mobile);
+    const height = getProblemScrollHeight(false);
     setScrollHeight(height);
-    setLiteMotion(mobile);
     section.style.height = height;
-
-    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (motionQuery.matches) {
-      setReducedMotion(true);
-      return;
-    }
 
     ensureGsapScroll();
 
     let ctx: gsap.Context | undefined;
     let refreshHandler: (() => void) | undefined;
-    const lite = mobile;
+    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+    let rafId = 0;
+    let attempts = 0;
+
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => refreshHandler?.(), 200);
+    };
 
     const init = () => {
       const panels = panelsRef.current.filter(Boolean) as HTMLElement[];
@@ -192,7 +197,7 @@ export function ProblemScrollExperience() {
 
       const update = (progress: number) => {
         setters.forEach((setter, index) => {
-          applyPanelTransform(setter, index, progress, lite);
+          applyPanelTransform(setter, index, progress, false);
         });
       };
 
@@ -204,8 +209,8 @@ export function ProblemScrollExperience() {
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: getProblemScrollScrub(mobile),
-          fastScrollEnd: mobile,
+          scrub: getProblemScrollScrub(false),
+          fastScrollEnd: false,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => update(self.progress),
@@ -220,32 +225,38 @@ export function ProblemScrollExperience() {
 
       refreshHandler();
       window.addEventListener("load", refreshHandler);
-      window.addEventListener("resize", refreshHandler);
+      window.addEventListener("resize", onResize);
       return true;
     };
 
     const tryInit = () => {
-      if (!init()) requestAnimationFrame(tryInit);
+      attempts += 1;
+      if (init() || attempts >= 60) {
+        cancelAnimationFrame(rafId);
+        return;
+      }
+      rafId = requestAnimationFrame(tryInit);
     };
 
     tryInit();
 
     return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(resizeTimer);
       if (refreshHandler) {
         window.removeEventListener("load", refreshHandler);
-        window.removeEventListener("resize", refreshHandler);
+        window.removeEventListener("resize", onResize);
       }
       ctx?.revert();
     };
-  }, []);
+  }, [enableScrollFx]);
 
-  if (reducedMotion) {
+  if (!enableScrollFx) {
     return <ProblemStaticFallback />;
   }
 
-  const panelClass = liteMotion
-    ? "absolute inset-0 overflow-hidden"
-    : "absolute inset-0 overflow-hidden [backface-visibility:hidden] [transform-style:preserve-3d]";
+  const panelClass =
+    "absolute inset-0 overflow-hidden [backface-visibility:hidden] [transform-style:preserve-3d]";
 
   return (
     <section
@@ -258,11 +269,11 @@ export function ProblemScrollExperience() {
     >
       <div
         className="sticky top-0 h-[100dvh] overflow-hidden bg-[#f1f1e9] [contain:layout_paint] [transform:translateZ(0)]"
-        style={liteMotion ? undefined : { perspective: "1400px" }}
+        style={{ perspective: "1400px" }}
       >
         <div
           className="relative h-full w-full"
-          style={liteMotion ? undefined : { transformStyle: "preserve-3d" }}
+          style={{ transformStyle: "preserve-3d" }}
         >
           <article
             ref={(el) => {

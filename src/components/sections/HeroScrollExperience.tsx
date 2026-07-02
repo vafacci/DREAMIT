@@ -20,7 +20,55 @@ import {
 import { getHeroTimeline } from "@/lib/heroScrollMath";
 import { isMobileDevice } from "@/lib/isMobileDevice";
 
+function HeroStaticFallback() {
+  return (
+    <section
+      data-section="hero"
+      className="relative bg-black"
+      aria-label="Intro"
+    >
+      <div className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center px-5 pb-12 pt-8 lg:min-h-[calc(100dvh-5rem)]">
+        <div className="mb-10 flex justify-center">
+          <Image
+            src={logoSymbol}
+            alt=""
+            priority
+            sizes="(max-width: 768px) 55vw, 320px"
+            className="h-auto w-[min(55vw,320px)] max-w-none select-none"
+          />
+        </div>
+
+        <div className="container-site flex max-w-lg flex-col items-center text-center">
+          <h1 className="text-h1-mobile lg:text-h1-desktop mb-6 tracking-[0.02em] text-white">
+            fra <span className="uppercase">hobby</span>
+            <br />
+            til <span className="uppercase">webshop</span>
+          </h1>
+
+          <p className="text-body mb-10 max-w-sm text-white/70">
+            For brands der vil online — lige så professionelt som det, de laver.
+          </p>
+
+          <div className="flex w-full max-w-xs flex-col gap-3">
+            <Button href={CTA_PRIMARY_HREF} className="w-full">
+              {CTA_PRIMARY}
+            </Button>
+            <Button
+              href={CTA_SECONDARY_HREF}
+              variant="secondary-inverted"
+              className="w-full"
+            >
+              {CTA_SECONDARY}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function HeroScrollExperience() {
+  const [enableScrollFx, setEnableScrollFx] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const logoSceneRef = useRef<HTMLDivElement>(null);
   const logoImgRef = useRef<HTMLImageElement>(null);
@@ -32,26 +80,23 @@ export function HeroScrollExperience() {
   );
 
   useLayoutEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setEnableScrollFx(!isMobileDevice() && !reduced);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!enableScrollFx) return;
+
     const section = sectionRef.current;
     const logoScene = logoSceneRef.current;
     const intro = introRef.current;
     if (!section || !logoScene || !intro) return;
 
-    const mobile = isMobileDevice();
-    const height = getHeroScrollHeight(mobile);
+    const height = getHeroScrollHeight(false);
     setScrollHeight(height);
     section.style.height = height;
 
     ensureGsapScroll();
-
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      const end = getHeroTimeline(1);
-      logoScene.style.opacity = String(end.logoSceneOpacity);
-      intro.style.opacity = String(end.introOpacity);
-      intro.style.transform = `translate3d(0, ${end.introY}px, 0)`;
-      return;
-    }
 
     const setLogoSceneOpacity = gsap.quickSetter(logoScene, "opacity");
     const setIntroOpacity = gsap.quickSetter(intro, "opacity");
@@ -96,6 +141,12 @@ export function HeroScrollExperience() {
 
     let ctx: gsap.Context | undefined;
     let refreshHandler: (() => void) | undefined;
+    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => refreshHandler?.(), 200);
+    };
 
     const mount = () => {
       ctx = gsap.context(() => {
@@ -104,8 +155,8 @@ export function HeroScrollExperience() {
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: getHeroScrollScrub(mobile),
-          fastScrollEnd: mobile,
+          scrub: getHeroScrollScrub(false),
+          fastScrollEnd: false,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => update(self.progress),
@@ -122,19 +173,24 @@ export function HeroScrollExperience() {
 
       refreshHandler();
       window.addEventListener("load", refreshHandler);
-      window.addEventListener("resize", refreshHandler);
+      window.addEventListener("resize", onResize);
     };
 
     mount();
 
     return () => {
+      clearTimeout(resizeTimer);
       if (refreshHandler) {
         window.removeEventListener("load", refreshHandler);
-        window.removeEventListener("resize", refreshHandler);
+        window.removeEventListener("resize", onResize);
       }
       ctx?.revert();
     };
-  }, []);
+  }, [enableScrollFx]);
+
+  if (!enableScrollFx) {
+    return <HeroStaticFallback />;
+  }
 
   return (
     <section
