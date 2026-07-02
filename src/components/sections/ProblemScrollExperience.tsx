@@ -156,14 +156,14 @@ export function ProblemScrollExperience() {
   const [liteMotion, setLiteMotion] = useState(false);
 
   useLayoutEffect(() => {
-    const mobile = isMobileDevice();
-    setScrollHeight(getProblemScrollHeight(mobile));
-    setLiteMotion(mobile);
-  }, []);
-
-  useLayoutEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
+
+    const mobile = isMobileDevice();
+    const height = getProblemScrollHeight(mobile);
+    setScrollHeight(height);
+    setLiteMotion(mobile);
+    section.style.height = height;
 
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (motionQuery.matches) {

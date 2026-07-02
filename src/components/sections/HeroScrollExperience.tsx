@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import logoSymbol from "@/assets/logo-symbol.webp";
@@ -31,15 +31,16 @@ export function HeroScrollExperience() {
     getHeroScrollHeight(false),
   );
 
-  useEffect(() => {
-    setScrollHeight(getHeroScrollHeight(isMobileDevice()));
-  }, []);
-
   useLayoutEffect(() => {
     const section = sectionRef.current;
     const logoScene = logoSceneRef.current;
     const intro = introRef.current;
     if (!section || !logoScene || !intro) return;
+
+    const mobile = isMobileDevice();
+    const height = getHeroScrollHeight(mobile);
+    setScrollHeight(height);
+    section.style.height = height;
 
     ensureGsapScroll();
 
@@ -52,7 +53,6 @@ export function HeroScrollExperience() {
       return;
     }
 
-    const mobile = isMobileDevice();
     const setLogoSceneOpacity = gsap.quickSetter(logoScene, "opacity");
     const setIntroOpacity = gsap.quickSetter(intro, "opacity");
     const setIntroY = gsap.quickSetter(intro, "y", "px");
@@ -94,21 +94,46 @@ export function HeroScrollExperience() {
       }
     };
 
-    const ctx = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: section,
-        start: "top top",
-        end: "bottom bottom",
-        scrub: getHeroScrollScrub(mobile),
-        fastScrollEnd: mobile,
-        anticipatePin: 1,
-        onUpdate: (self) => update(self.progress),
-      });
-    }, section);
+    let ctx: gsap.Context | undefined;
+    let refreshHandler: (() => void) | undefined;
 
-    update(0);
+    const mount = () => {
+      ctx = gsap.context(() => {
+        ScrollTrigger.create({
+          id: "hero-scroll",
+          trigger: section,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: getHeroScrollScrub(mobile),
+          fastScrollEnd: mobile,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => update(self.progress),
+        });
+      }, section);
 
-    return () => ctx.revert();
+      update(0);
+
+      refreshHandler = () => {
+        ScrollTrigger.refresh();
+        const trigger = ScrollTrigger.getById("hero-scroll");
+        if (trigger) update(trigger.progress);
+      };
+
+      refreshHandler();
+      window.addEventListener("load", refreshHandler);
+      window.addEventListener("resize", refreshHandler);
+    };
+
+    mount();
+
+    return () => {
+      if (refreshHandler) {
+        window.removeEventListener("load", refreshHandler);
+        window.removeEventListener("resize", refreshHandler);
+      }
+      ctx?.revert();
+    };
   }, []);
 
   return (
