@@ -175,7 +175,6 @@ export function ProblemScrollExperience() {
 
     let ctx: gsap.Context | undefined;
     let refreshHandler: (() => void) | undefined;
-    const mobile = isMobileDevice();
     const lite = mobile;
 
     const init = () => {
