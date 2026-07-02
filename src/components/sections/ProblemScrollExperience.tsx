@@ -307,7 +307,7 @@ export function ProblemScrollExperience() {
       ref={sectionRef}
       id="hvad-vi-goer"
       data-section="problem"
-      className="relative bg-[#f1f1e9]"
+      className="relative z-0 -mt-[100dvh] bg-[#f1f1e9]"
       style={{ height: scrollHeight }}
       aria-label="Problemet"
     >

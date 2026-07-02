@@ -33,7 +33,7 @@ export function getHeroTimeline(progress: number): HeroTimeline {
     1 - easeInOutCubic(mapRange(raw, 0.5, 0.88)) * 0.4,
   );
 
-  const logoSceneOpacity = clamp01(1 - easeInOutCubic(mapRange(raw, 0.88, 1)));
+  const logoSceneOpacity = clamp01(1 - easeInOutCubic(mapRange(raw, 0.82, 0.94)));
 
   const scrollHintOpacity = clamp01(1 - raw / 0.16);
 

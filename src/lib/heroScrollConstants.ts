@@ -1,5 +1,5 @@
 export const HERO_SCROLL_HEIGHT_VH_DESKTOP = 220;
-export const HERO_SCROLL_HEIGHT_VH_MOBILE = 120;
+export const HERO_SCROLL_HEIGHT_VH_MOBILE = 108;
 
 export function getHeroScrollHeight(mobile = false) {
   const vh = mobile ? HERO_SCROLL_HEIGHT_VH_MOBILE : HERO_SCROLL_HEIGHT_VH_DESKTOP;

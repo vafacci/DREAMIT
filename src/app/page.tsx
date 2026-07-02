@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <>
       <Header />
-      <main className="relative bg-black">
+      <main className="relative isolate bg-black">
         <HeroScrollExperience />
         <ProblemScrollExperience />
       </main>

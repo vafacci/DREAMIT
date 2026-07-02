@@ -138,7 +138,7 @@ export function HeroScrollExperience() {
     <section
       ref={sectionRef}
       data-section="hero"
-      className="relative bg-black"
+      className="relative z-10 bg-black"
       style={{ height: scrollHeight }}
       aria-label="Intro"
     >
