@@ -1,4 +1,5 @@
-import { Card } from "./Card";
+import Link from "next/link";
+import { CTA_PRIMARY, CTA_PRIMARY_HREF } from "@/lib/constants";
 
 type PackageCardProps = {
   name: string;
@@ -10,6 +11,28 @@ type PackageCardProps = {
   badge?: string;
 };
 
+function CheckIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden
+      className="mt-0.5 shrink-0 text-dream-primary-soft"
+    >
+      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+      <path
+        d="M5 8.2 7 10.2 11 6.2"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function PackageCard({
   name,
   tagline,
@@ -20,51 +43,62 @@ export function PackageCard({
   badge = "Anbefalet",
 }: PackageCardProps) {
   return (
-    <Card
-      className={`flex h-full flex-col gap-5 text-dream-text-dark motion-reduce:animate-none ${
-        highlighted
-          ? "package-card--featured border border-dream-primary ring-1 ring-dream-primary/20"
-          : "transition-shadow duration-300 hover:shadow-[0_16px_40px_-24px_rgba(0,0,0,0.2)]"
+    <article
+      className={`pricing-card motion-reduce:animate-none ${
+        highlighted ? "pricing-card--featured package-card--featured" : "pricing-card--standard"
       }`}
     >
-      {badge ? (
-        <p
-          className={`text-[10px] font-medium uppercase tracking-[0.18em] text-dream-primary motion-reduce:animate-none ${
-            highlighted ? "package-card__badge" : ""
-          }`}
+      {highlighted ? <div className="pricing-card__glow" aria-hidden /> : null}
+
+      <div className="pricing-card__inner">
+        {badge ? (
+          <span
+            className={`pricing-card__badge ${
+              highlighted ? "package-card__badge motion-reduce:animate-none" : ""
+            }`}
+          >
+            {badge}
+          </span>
+        ) : null}
+
+        <div>
+          <h3 className="font-heading text-2xl leading-tight text-dream-text">{name}</h3>
+          <p className="mt-1 text-sm text-dream-muted">{tagline}</p>
+        </div>
+
+        <div className="pricing-card__price">
+          <p className="text-sm text-dream-muted line-through decoration-dream-primary/40">
+            Fra {fullPrice}
+          </p>
+          <div className="mt-2 flex items-baseline gap-2">
+            <p className="font-heading text-4xl leading-none text-dream-text">{upfrontPrice}</p>
+            <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-dream-muted">
+              ved opstart
+            </span>
+          </div>
+        </div>
+
+        <Link
+          href={CTA_PRIMARY_HREF}
+          className={`pricing-card__cta ${highlighted ? "pricing-card__cta--featured" : ""}`}
+          {...(highlighted ? { "data-primary-cta": true } : {})}
         >
-          {badge}
-        </p>
-      ) : null}
+          {CTA_PRIMARY}
+          <span aria-hidden> →</span>
+        </Link>
 
-      <div className="flex flex-col gap-2">
-        <h3 className="font-heading text-2xl leading-tight">{name}</h3>
-        <p className="text-body text-dream-muted-dark">{tagline}</p>
+        <div className="pricing-card__features">
+          <p className="pricing-card__features-label">Inkluderet</p>
+          <ul className="flex flex-col gap-2.5">
+            {features.map((feature) => (
+              <li key={feature} className="flex gap-2.5 text-sm text-dream-muted">
+                <CheckIcon />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-
-      <div className="border-t border-dream-border-dark pt-4">
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-dream-muted-dark">
-          Samlet pris
-        </p>
-        <p className="font-heading mt-1 text-xl text-dream-muted-dark line-through decoration-dream-primary/50">
-          Fra {fullPrice}
-        </p>
-        <p className="font-heading mt-3 text-3xl leading-none text-dream-text-dark">
-          {upfrontPrice}
-        </p>
-        <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-dream-muted-dark">
-          ved opstart
-        </p>
-      </div>
-
-      <ul className="flex flex-col gap-2 text-body text-dream-text-dark/80">
-        {features.map((feature) => (
-          <li key={feature} className="flex gap-2">
-            <span className="text-dream-primary">·</span>
-            {feature}
-          </li>
-        ))}
-      </ul>
-    </Card>
+    </article>
   );
 }
