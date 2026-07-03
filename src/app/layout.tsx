@@ -12,7 +12,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "DREAMit — Fra hobby til webshop",
   description:
-    "Vi hjælper kreative mennesker med at gå fra hobby og idé til brand, webshop og launch.",
+    "Dreamy tech webstudio der hjælper dig fra hobby, idé og drøm til brand, webshop og launch.",
 };
 
 export default function RootLayout({
@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="da" className={`${inter.variable} h-full`}>
-      <body className="min-h-full flex flex-col bg-black">{children}</body>
+      <body className="flex min-h-full flex-col bg-dream-bg">{children}</body>
     </html>
   );
 }

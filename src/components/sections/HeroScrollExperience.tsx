@@ -1,15 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useLayoutEffect, useRef, useState } from "react";
-import logoSymbol from "@/assets/logo-symbol.webp";
-import { Button } from "@/components/ui/Button";
-import {
-  CTA_PRIMARY,
-  CTA_PRIMARY_HREF,
-  CTA_SECONDARY,
-  CTA_SECONDARY_HREF,
-} from "@/lib/constants";
+import { HeroIntroContent } from "@/components/hero/HeroIntroContent";
 import { bindScrollTriggerRefresh, loadGsapScroll } from "@/lib/gsapScroll";
 import {
   getHeroScrollHeight,
@@ -18,12 +10,19 @@ import {
 import { getHeroTimeline } from "@/lib/heroScrollMath";
 import { isMobileDevice } from "@/lib/isMobileDevice";
 
+function applyStageTransform(
+  stage: HTMLElement,
+  t: ReturnType<typeof getHeroTimeline>,
+) {
+  stage.style.transform = `translate3d(0, ${t.stageTranslateY}px, ${t.stageTranslateZ}px) rotateX(${t.stageRotateX}deg) rotateY(${t.stageRotateY}deg) scale(${t.stageScale})`;
+}
+
 export function HeroScrollExperience() {
   const sectionRef = useRef<HTMLElement>(null);
-  const logoSceneRef = useRef<HTMLDivElement>(null);
-  const logoImgRef = useRef<HTMLImageElement>(null);
-  const introRef = useRef<HTMLDivElement>(null);
-  const glowRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const headlineRef = useRef<HTMLDivElement>(null);
+  const wordmarkRef = useRef<HTMLSpanElement>(null);
+  const detailsRef = useRef<HTMLDivElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
   const [scrollHeight, setScrollHeight] = useState(() =>
     getHeroScrollHeight(false),
@@ -31,9 +30,10 @@ export function HeroScrollExperience() {
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
-    const logoScene = logoSceneRef.current;
-    const intro = introRef.current;
-    if (!section || !logoScene || !intro) return;
+    const stage = stageRef.current;
+    const headline = headlineRef.current;
+    const details = detailsRef.current;
+    if (!section || !stage || !headline || !details) return;
 
     const mobile = isMobileDevice();
     const height = getHeroScrollHeight(mobile);
@@ -42,10 +42,12 @@ export function HeroScrollExperience() {
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
-      const end = getHeroTimeline(1);
-      logoScene.style.opacity = String(end.logoSceneOpacity);
-      intro.style.opacity = String(end.introOpacity);
-      intro.style.transform = `translate3d(0, ${end.introY}px, 0)`;
+      const end = getHeroTimeline(1, mobile);
+      headline.style.opacity = String(end.logoSceneOpacity);
+      details.style.opacity = String(end.introOpacity);
+      details.style.transform = `translate3d(0, ${end.introY}px, 0)`;
+      stage.style.opacity = String(end.stageOpacity);
+      applyStageTransform(stage, end);
       return;
     }
 
@@ -56,48 +58,49 @@ export function HeroScrollExperience() {
     void loadGsapScroll().then(({ gsap, ScrollTrigger }) => {
       if (cancelled) return;
 
-      const setLogoSceneOpacity = gsap.quickSetter(logoScene, "opacity");
-      const setIntroOpacity = gsap.quickSetter(intro, "opacity");
-      const setIntroY = gsap.quickSetter(intro, "y", "px");
-      const setGlowOpacity = glowRef.current
-        ? gsap.quickSetter(glowRef.current, "opacity")
-        : null;
-      const setHintOpacity = hintRef.current
-        ? gsap.quickSetter(hintRef.current, "opacity")
-        : null;
-      const setLogoScale =
-        !mobile && logoImgRef.current
-          ? gsap.quickSetter(logoImgRef.current, "scale")
-          : null;
-      const setLogoOpacity = logoImgRef.current
-        ? gsap.quickSetter(logoImgRef.current, "opacity")
-        : null;
+      gsap.set(stage, {
+        force3D: true,
+        transformOrigin: "50% 100%",
+        transformStyle: "preserve-3d",
+      });
 
-      if (logoImgRef.current && !mobile) {
-        gsap.set(logoImgRef.current, {
+      if (wordmarkRef.current) {
+        gsap.set(wordmarkRef.current, {
           force3D: true,
           transformOrigin: "50% 50%",
         });
       }
 
-      gsap.set(intro, { force3D: !mobile });
+      gsap.set(details, { force3D: true });
+
+      const setStageOpacity = gsap.quickSetter(stage, "opacity");
+      const setHeadlineOpacity = gsap.quickSetter(headline, "opacity");
+      const setDetailsOpacity = gsap.quickSetter(details, "opacity");
+      const setDetailsY = gsap.quickSetter(details, "y", "px");
+      const setHintOpacity = hintRef.current
+        ? gsap.quickSetter(hintRef.current, "opacity")
+        : null;
+      const setLogoScale = wordmarkRef.current
+        ? gsap.quickSetter(wordmarkRef.current, "scale")
+        : null;
 
       let introInteractive = true;
 
       const update = (progress: number) => {
-        const t = getHeroTimeline(progress);
-        setLogoSceneOpacity(t.logoSceneOpacity);
-        setIntroOpacity(t.introOpacity);
-        setIntroY(t.introY);
-        if (setGlowOpacity) setGlowOpacity(t.accentGlowOpacity);
-        if (setHintOpacity) setHintOpacity(t.scrollHintOpacity);
-        if (setLogoScale) setLogoScale(0.7 + t.cameraProgress * 0.95);
-        if (setLogoOpacity) setLogoOpacity(0.5 + t.cameraProgress * 0.5);
+        const t = getHeroTimeline(progress, mobile);
 
-        const interactive = t.introOpacity > 0.15;
+        applyStageTransform(stage, t);
+        setStageOpacity(t.stageOpacity);
+        setHeadlineOpacity(t.logoSceneOpacity);
+        setDetailsOpacity(t.introOpacity);
+        setDetailsY(t.introY);
+        if (setHintOpacity) setHintOpacity(t.scrollHintOpacity);
+        if (setLogoScale) setLogoScale(t.logoScale);
+
+        const interactive = t.introOpacity > 0.15 && t.exitProgress < 0.08;
         if (interactive !== introInteractive) {
           introInteractive = interactive;
-          intro.style.pointerEvents = interactive ? "auto" : "none";
+          details.style.pointerEvents = interactive ? "auto" : "none";
         }
       };
 
@@ -138,69 +141,35 @@ export function HeroScrollExperience() {
     <section
       ref={sectionRef}
       data-section="hero"
-      className="relative z-10 bg-black"
+      className="relative z-20 bg-dream-bg"
       style={{ height: scrollHeight }}
       aria-label="Intro"
     >
-      <div className="sticky top-0 h-[100dvh] overflow-hidden bg-black [contain:layout_paint] [transform:translateZ(0)]">
-        <div ref={logoSceneRef} className="absolute inset-0 z-10">
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black">
-            <Image
-              ref={logoImgRef}
-              src={logoSymbol}
-              alt=""
-              priority
-              sizes="(max-width: 768px) 70vw, 480px"
-              className="h-auto w-[min(70vw,480px)] max-w-none select-none"
+      <div
+        className="hero-fold-sticky sticky top-0 overflow-hidden [perspective:1400px] [transform-style:preserve-3d]"
+        style={{ perspectiveOrigin: "50% 100%" }}
+      >
+        <div
+          ref={stageRef}
+          className="relative h-full w-full bg-dream-bg [transform-style:preserve-3d] [transform-origin:50%_100%] [backface-visibility:hidden]"
+        >
+          <div className="absolute inset-0 z-10 flex items-start justify-center overflow-y-auto">
+            <HeroIntroContent
+              headlineRef={headlineRef}
+              wordmarkRef={wordmarkRef}
+              detailsRef={detailsRef}
             />
           </div>
-        </div>
 
-        <div
-          ref={glowRef}
-          className="pointer-events-none absolute inset-0 z-[15] bg-gradient-to-br from-brand/10 via-transparent to-transparent"
-          aria-hidden="true"
-        />
-
-        <div
-          ref={introRef}
-          className="absolute inset-0 z-20 flex items-center justify-center px-5"
-        >
-          <div className="container-site flex max-w-lg flex-col items-center text-center">
-            <h1 className="text-h1-mobile lg:text-h1-desktop mb-6 tracking-[0.02em] text-white">
-              fra <span className="uppercase">hobby</span>
-              <br />
-              til <span className="uppercase">webshop</span>
-            </h1>
-
-            <p className="text-body mb-10 max-w-sm text-white/70">
-              For brands der vil online — lige så professionelt som det, de
-              laver.
-            </p>
-
-            <div className="flex w-full max-w-xs flex-col gap-3">
-              <Button href={CTA_PRIMARY_HREF} className="w-full">
-                {CTA_PRIMARY}
-              </Button>
-              <Button
-                href={CTA_SECONDARY_HREF}
-                variant="secondary-inverted"
-                className="w-full"
-              >
-                {CTA_SECONDARY}
-              </Button>
-            </div>
+          <div
+            ref={hintRef}
+            className="absolute bottom-3 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-2"
+          >
+            <span className="text-[11px] uppercase tracking-[0.2em] text-dream-muted">
+              Scroll
+            </span>
+            <span className="block h-6 w-px animate-pulse bg-dream-primary" />
           </div>
-        </div>
-
-        <div
-          ref={hintRef}
-          className="absolute bottom-8 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-2"
-        >
-          <span className="text-[11px] uppercase tracking-[0.2em] text-white/50">
-            Scroll
-          </span>
-          <span className="block h-8 w-px animate-pulse bg-brand" />
         </div>
       </div>
     </section>

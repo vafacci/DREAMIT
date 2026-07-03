@@ -19,11 +19,18 @@ export function LogoMark({ className = "" }: LogoMarkProps) {
       className={className}
       aria-hidden="true"
     >
+      <defs>
+        <linearGradient id="dream-logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#1C2D7A" />
+          <stop offset="52%" stopColor="#4C3FD9" />
+          <stop offset="100%" stopColor="#7A3EF0" />
+        </linearGradient>
+      </defs>
       {SWOOSH_PATHS.map((d, index) => (
         <path
           key={d}
           d={d}
-          stroke="#B2190C"
+          stroke="url(#dream-logo-gradient)"
           strokeWidth={10 - index * 1.6}
           strokeLinecap="round"
           strokeLinejoin="round"

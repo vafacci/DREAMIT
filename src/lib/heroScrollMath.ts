@@ -18,24 +18,50 @@ export type HeroTimeline = {
   logoSceneOpacity: number;
   cameraProgress: number;
   scrollHintOpacity: number;
+  exitProgress: number;
+  stageRotateX: number;
+  stageRotateY: number;
+  stageTranslateY: number;
+  stageTranslateZ: number;
+  stageScale: number;
+  stageOpacity: number;
+  logoScale: number;
+  exitGlowOpacity: number;
 };
 
-export function getHeroTimeline(progress: number): HeroTimeline {
+export function getHeroTimeline(progress: number, mobile = false): HeroTimeline {
   const raw = clamp01(progress);
 
   const introFade = mapRange(raw, 0.16, 0.42);
   const introOpacity = clamp01(1 - easeInOutCubic(introFade));
   const introY = easeInOutCubic(introFade) * -28;
 
-  const cameraProgress = easeInOutCubic(mapRange(raw, 0.12, 0.9));
+  const cameraProgress = easeInOutCubic(mapRange(raw, 0.12, 0.66));
+  const exitProgress = easeInOutCubic(mapRange(raw, 0.66, 1));
 
   const accentGlowOpacity = clamp01(
-    1 - easeInOutCubic(mapRange(raw, 0.5, 0.88)) * 0.4,
+    1 - easeInOutCubic(mapRange(raw, 0.48, 0.72)) * 0.4,
   );
 
-  const logoSceneOpacity = clamp01(1 - easeInOutCubic(mapRange(raw, 0.82, 0.94)));
-
   const scrollHintOpacity = clamp01(1 - raw / 0.16);
+
+  const logoSceneOpacity =
+    exitProgress > 0
+      ? clamp01(1 - easeInOutCubic(mapRange(raw, 0.66, 0.9)))
+      : 1;
+
+  const logoScaleBase = mobile ? 0.9 : 0.88;
+  const logoScaleZoom = mobile ? 0.08 : 0.12;
+  const logoScaleExit = exitProgress * (mobile ? 0.12 : 0.18);
+  const logoScale = logoScaleBase + cameraProgress * logoScaleZoom - logoScaleExit;
+
+  const stageRotateX = exitProgress * (mobile ? 36 : 74);
+  const stageRotateY = exitProgress * (mobile ? 5 : 11);
+  const stageTranslateY = -exitProgress * (mobile ? 32 : 58);
+  const stageTranslateZ = -exitProgress * (mobile ? 100 : 280);
+  const stageScale = 1 - exitProgress * (mobile ? 0.06 : 0.12);
+  const stageOpacity = 1 - exitProgress * (mobile ? 0.3 : 0.5);
+  const exitGlowOpacity = clamp01(Math.sin(exitProgress * Math.PI) * 0.85);
 
   return {
     raw,
@@ -45,5 +71,14 @@ export function getHeroTimeline(progress: number): HeroTimeline {
     logoSceneOpacity,
     cameraProgress,
     scrollHintOpacity,
+    exitProgress,
+    stageRotateX,
+    stageRotateY,
+    stageTranslateY,
+    stageTranslateZ,
+    stageScale,
+    stageOpacity,
+    logoScale,
+    exitGlowOpacity,
   };
 }

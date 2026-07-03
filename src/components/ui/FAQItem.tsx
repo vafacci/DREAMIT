@@ -11,7 +11,7 @@ export function FAQItem({ question, answer }: FAQItemProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border-b border-black/10">
+    <div className="border-b border-dream-border-dark/80">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -19,10 +19,10 @@ export function FAQItem({ question, answer }: FAQItemProps) {
         aria-expanded={open}
       >
         <span className="text-body font-medium">{question}</span>
-        <span className="text-brand text-xl leading-none">{open ? "−" : "+"}</span>
+        <span className="text-xl leading-none text-dream-primary">{open ? "−" : "+"}</span>
       </button>
       {open && (
-        <p className="pb-5 text-body text-black/70">{answer}</p>
+        <p className="pb-5 text-body text-dream-muted-dark">{answer}</p>
       )}
     </div>
   );

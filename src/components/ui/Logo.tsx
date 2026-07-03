@@ -1,40 +1,37 @@
-import Image from "next/image";
-import logoBrand from "@/assets/logo-brand.webp";
-import logoSymbol from "@/assets/logo-symbol.webp";
+import logoSymbol from "@/assets/dreamit-orbit-logo-gradient-exact.svg";
 
-const LOGO_HEIGHT = "h-8 lg:h-9";
+const HEADER_LOGO = "h-8 w-8 shrink-0 lg:h-9 lg:w-9";
 
 type LogoPartProps = {
   className?: string;
 };
 
+function logoSrc(asset: string | { src: string }) {
+  return typeof asset === "string" ? asset : asset.src;
+}
+
 export function LogoSymbol({
-  className = `${LOGO_HEIGHT} w-8 shrink-0 lg:w-9`,
+  className = HEADER_LOGO,
 }: LogoPartProps) {
   return (
-    <Image
-      src={logoSymbol}
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={logoSrc(logoSymbol)}
       alt=""
       className={`object-contain ${className}`}
-      priority
-      sizes="36px"
       aria-hidden
+      decoding="async"
     />
   );
 }
 
 export function LogoWordmark({
-  className = `${LOGO_HEIGHT} w-auto shrink-0`,
+  className = "font-heading text-lg tracking-tight text-dream-text lg:text-xl",
 }: LogoPartProps) {
   return (
-    <Image
-      src={logoBrand}
-      alt=""
-      className={`object-contain ${className}`}
-      priority
-      sizes="120px"
-      aria-hidden
-    />
+    <span className={className} aria-hidden>
+      DREAM<span className="text-dream-gradient italic">it</span>
+    </span>
   );
 }
 

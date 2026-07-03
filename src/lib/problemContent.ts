@@ -1,10 +1,12 @@
 import { withBasePath } from "./basePath";
 
 export const PROBLEM_HEADER = {
-  label: "Problemet",
   title: "Du kender det",
-  subtitle:
-    "Du elsker det, du laver. Men vejen fra hobby til rigtig forretning kan føles som en jungle — navn, logo, shop og salg på én gang.",
+  intro: {
+    before: "Du elsker det, du laver. Men fire ting skal falde på plads på én gang:",
+    after: "Det er dér mange går i stå — uden at det behøver at føles uoverskueligt.",
+    pillars: ["brand", "oprettelse", "shop", "salg"] as const,
+  },
   image: {
     src: withBasePath("/carousel/problem-intro.jpg"),
     alt: "Person der læser magasin — overvældet af valg",
@@ -12,7 +14,6 @@ export const PROBLEM_HEADER = {
 };
 
 export type ProblemStep = {
-  number: string;
   title: string;
   subtitle: string;
   image: { src: string; alt: string };
@@ -20,27 +21,24 @@ export type ProblemStep = {
 
 export const PROBLEM_STEPS: ProblemStep[] = [
   {
-    number: "01",
-    title: "Navn",
+    title: "Brand",
     subtitle:
-      "Du ved ikke, hvad dit brand skal hedde — eller om det overhovedet lyder rigtigt.",
-    image: { src: withBasePath("/carousel/navn/navn.jpg"), alt: "Brandnavn eksempel" },
+      "Ingen navn, ingen logo, ingen stil — du ved ikke rigtig, hvem dit brand er endnu.",
+    image: { src: withBasePath("/carousel/look/look.jpg"), alt: "Brandidentitet eksempel" },
   },
   {
-    number: "02",
-    title: "Look",
-    subtitle: "Ingen logo, ingen farver, ingen stil der føles som dig.",
-    image: { src: withBasePath("/carousel/look/look.jpg"), alt: "Visuel identitet eksempel" },
+    title: "Oprettelse",
+    subtitle:
+      "Firma, bankkonto, CVR — det praktiske føles uoverskueligt, før du overhovedet kommer i gang.",
+    image: { src: withBasePath("/carousel/oprettelse/oprettelse.jpg"), alt: "Oprettelse af firma" },
   },
   {
-    number: "03",
     title: "Shop",
     subtitle:
       "Du ved ikke, hvordan du får en webshop op — uden at det bliver overvældende.",
     image: { src: withBasePath("/carousel/shop/shop.jpg"), alt: "Webshop eksempel" },
   },
   {
-    number: "04",
     title: "Salg",
     subtitle: "Du ved ikke, hvordan du når ud og får dine første kunder.",
     image: { src: withBasePath("/carousel/salg/salg.jpg"), alt: "Marketing og salg eksempel" },

@@ -1,24 +1,29 @@
 export const SITE_NAME = "DREAMit";
 
 export const NAV_LINKS = [
-  { label: "Hvad vi gør", href: "#hvad-vi-goer" },
-  { label: "Proces", href: "#proces" },
+  { label: "Sådan hjælper vi", href: "#hvordan-vi-hjaelper" },
   { label: "Pakker", href: "#pakker" },
-  { label: "Cases", href: "#cases" },
   { label: "FAQ", href: "#faq" },
   { label: "Kontakt", href: "#kontakt" },
 ] as const;
 
-export const CTA_PRIMARY = "Book et møde";
-export const CTA_SECONDARY = "Start din drøm";
+export const CTA_PRIMARY = "BOOK ET MØDE";
+export const CTA_SECONDARY = "SE PROCESSEN";
+export const CTA_BANNER_LEAD = "START DIN DRØM";
 
-/** Primær konvertering — 1:1 samtale via kontakt/booking */
+/** Rækkefølge på primær CTA-banner: lead først, derefter handling */
+export const CTA_BANNER_LABELS = [CTA_BANNER_LEAD, CTA_PRIMARY] as const;
+export const CTA_BANNER_INTERVAL_MS = 3500;
+
+/** Primær konvertering — direkte handling */
 export const CTA_PRIMARY_HREF = "#kontakt";
 /** Blød indgang — læs om processen før man booker */
-export const CTA_SECONDARY_HREF = "#proces";
+export const CTA_SECONDARY_HREF = "#hvordan-vi-hjaelper";
 
 export const COLORS = {
-  black: "#000000",
-  white: "#FFFFFF",
-  accent: "#B2190C",
+  black: "#05070D",
+  white: "#FAFAF8",
+  accent: "#4C3FD9",
 } as const;
+
+export const CONTACT_EMAIL = "hej@dreamit.dk";

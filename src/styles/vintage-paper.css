@@ -1,9 +1,9 @@
 @layer components {
   .vintage-paper-section {
-    --vintage-paper-base: #f1f1e9;
-    --vintage-paper-warm: #efede4;
-    --vintage-paper-cool: #e9e7de;
-    --vintage-paper-highlight: #f7f6f0;
+    --vintage-paper-base: var(--dream-paper);
+    --vintage-paper-warm: var(--dream-paper-warm);
+    --vintage-paper-cool: #eee8df;
+    --vintage-paper-highlight: #fdfcfa;
 
     position: relative;
     isolation: isolate;
@@ -16,20 +16,14 @@
       ),
       radial-gradient(
         ellipse 85% 65% at 92% 96%,
-        rgba(219, 212, 196, 0.28) 0%,
+        rgba(76, 63, 217, 0.06) 0%,
         transparent 52%
-      ),
-      radial-gradient(
-        ellipse 70% 55% at 6% 88%,
-        rgba(235, 232, 222, 0.55) 0%,
-        transparent 48%
       ),
       linear-gradient(
         162deg,
         var(--vintage-paper-highlight) 0%,
         var(--vintage-paper-base) 42%,
-        var(--vintage-paper-warm) 76%,
-        var(--vintage-paper-cool) 100%
+        var(--vintage-paper-warm) 100%
       );
   }
 
@@ -39,30 +33,11 @@
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.22;
+    opacity: 0.18;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
     background-size: 180px 180px;
     background-repeat: repeat;
     mix-blend-mode: multiply;
-  }
-
-  .vintage-paper-section::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(
-        ellipse 115% 95% at 50% 50%,
-        transparent 52%,
-        rgba(198, 192, 178, 0.1) 100%
-      ),
-      radial-gradient(
-        ellipse 60% 45% at 18% 22%,
-        rgba(255, 252, 245, 0.14) 0%,
-        transparent 70%
-      );
   }
 
   .vintage-paper-section > * {
@@ -76,12 +51,11 @@
         162deg,
         var(--vintage-paper-highlight) 0%,
         var(--vintage-paper-base) 50%,
-        var(--vintage-paper-cool) 100%
+        var(--vintage-paper-warm) 100%
       );
     }
 
-    .vintage-paper-section::before,
-    .vintage-paper-section::after {
+    .vintage-paper-section::before {
       display: none;
     }
   }

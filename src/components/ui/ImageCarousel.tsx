@@ -48,7 +48,7 @@ export function ImageCarousel({
   if (images.length === 0) return null;
 
   const inactiveDot =
-    theme === "paper" ? "w-4 bg-black/20" : "w-4 bg-white/25";
+    theme === "paper" ? "w-4 bg-dream-text-dark/20" : "w-4 bg-dream-text/25";
 
   return (
     <div className={className}>
@@ -84,7 +84,7 @@ export function ImageCarousel({
               type="button"
               onClick={() => scrollTo(index)}
               className={`h-[2px] transition-all duration-300 ${
-                index === active ? "w-8 bg-brand" : inactiveDot
+                index === active ? "w-8 bg-dream-primary" : inactiveDot
               }`}
               aria-label={`Gå til billede ${index + 1}`}
               aria-current={index === active}
