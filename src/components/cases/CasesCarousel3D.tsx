@@ -28,18 +28,16 @@ function setCasesActive(active: boolean) {
 function CasePhoneFrame({
   alt,
   image,
-  active,
+  frameRef,
   eager,
 }: {
   alt: string;
   image: StaticImageData;
-  active?: boolean;
+  frameRef?: (node: HTMLDivElement | null) => void;
   eager?: boolean;
 }) {
   return (
-    <div
-      className={`cases-panel__frame ${active ? "cases-panel__frame--active" : ""}`}
-    >
+    <div ref={frameRef} className="cases-panel__frame">
       <div className="cases-panel__screen">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -61,46 +59,66 @@ export function CasesCarousel3D() {
   const sectionRef = useRef<HTMLElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const faceRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const frameRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const projectRef = useRef<HTMLParagraphElement>(null);
+  const categoryRef = useRef<HTMLParagraphElement>(null);
+  const captionRef = useRef<HTMLParagraphElement>(null);
+  const dotRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const activeIndexRef = useRef(0);
   const [scrollHeight, setScrollHeight] = useState(() =>
     getCasesScrollHeight(CASE_SLIDES.length, false),
   );
-  const [activeIndex, setActiveIndex] = useState(0);
 
-  const applyRing = useCallback((progress: number) => {
-    const ring = ringRef.current;
-    if (!ring) return;
+  const updateActiveUi = useCallback((index: number) => {
+    if (index === activeIndexRef.current) return;
 
-    const slideCount = CASE_SLIDES.length;
-    const rotation = getCasesRingRotation(progress, slideCount);
-    ring.style.transform = `rotateX(8deg) rotateY(${rotation}deg)`;
+    activeIndexRef.current = index;
+    const slide = CASE_SLIDES[index];
 
-    const step = 360 / slideCount;
+    if (projectRef.current) projectRef.current.textContent = slide.project;
+    if (categoryRef.current) categoryRef.current.textContent = slide.category;
+    if (captionRef.current) captionRef.current.textContent = slide.caption;
 
-    panelRefs.current.forEach((panel, index) => {
-      if (!panel) return;
-
-      const face = faceRefs.current[index];
-      const visual = getCasePanelVisual(index, rotation, slideCount);
-      const worldAngle = (((index * step + rotation) % 360) + 360) % 360;
-      const distance = Math.min(worldAngle, 360 - worldAngle);
-      const isFront = distance < step * 0.42;
-
-      panel.style.opacity = String(visual.opacity);
-      panel.style.zIndex = String(visual.zIndex);
-      panel.style.transform = `rotateY(${step * index}deg) translateZ(var(--cases-carousel-radius)) scale(${visual.scale})`;
-
-      if (face) {
-        face.style.transform = "translateZ(0.1px)";
-        face.style.filter = isFront
-          ? "none"
-          : `blur(${visual.blur}px) brightness(${visual.brightness})`;
-      }
+    dotRefs.current.forEach((dot, dotIndex) => {
+      if (!dot) return;
+      const active = dotIndex === index;
+      dot.classList.toggle("cases-carousel__dot-btn--active", active);
+      dot.setAttribute("aria-selected", active ? "true" : "false");
     });
 
-    const nextIndex = getActiveSlideIndex(progress, slideCount);
-    setActiveIndex((current) => (current === nextIndex ? current : nextIndex));
+    frameRefs.current.forEach((frame, frameIndex) => {
+      frame?.classList.toggle("cases-panel__frame--active", frameIndex === index);
+    });
+
+    panelRefs.current.forEach((panel, panelIndex) => {
+      panel?.setAttribute("aria-hidden", panelIndex !== index ? "true" : "false");
+    });
   }, []);
+
+  const applyRing = useCallback(
+    (progress: number) => {
+      const ring = ringRef.current;
+      if (!ring) return;
+
+      const slideCount = CASE_SLIDES.length;
+      const rotation = getCasesRingRotation(progress, slideCount);
+      ring.style.transform = `rotateX(3deg) rotateY(${rotation}deg)`;
+
+      const step = 360 / slideCount;
+
+      panelRefs.current.forEach((panel, index) => {
+        if (!panel) return;
+
+        const visual = getCasePanelVisual(index, rotation, slideCount);
+        panel.style.opacity = String(visual.opacity);
+        panel.style.zIndex = String(visual.zIndex);
+        panel.style.transform = `rotateY(${step * index}deg) translateZ(var(--cases-carousel-radius)) scale(${visual.scale})`;
+      });
+
+      updateActiveUi(getActiveSlideIndex(progress, slideCount));
+    },
+    [updateActiveUi],
+  );
 
   const scrollToIndex = useCallback((index: number) => {
     const section = sectionRef.current;
@@ -133,6 +151,7 @@ export function CasesCarousel3D() {
     const height = getCasesScrollHeight(CASE_SLIDES.length, mobile);
     setScrollHeight(height);
     section.style.height = height;
+    updateActiveUi(0);
     applyRing(0);
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -168,9 +187,10 @@ export function CasesCarousel3D() {
           trigger: section,
           start: "top top",
           end: "bottom bottom",
-          scrub: mobile ? 0.65 : 0.9,
+          scrub: mobile ? true : 0.75,
           pin: ".cases-carousel__pin",
           anticipatePin: 1,
+          fastScrollEnd: mobile,
           invalidateOnRefresh: true,
           onUpdate: (self) => applyRing(self.progress),
           onEnter: () => setCasesActive(true),
@@ -198,9 +218,9 @@ export function CasesCarousel3D() {
       unbindRefresh?.();
       ctx?.revert();
     };
-  }, [applyRing]);
+  }, [applyRing, updateActiveUi]);
 
-  const activeSlide = CASE_SLIDES[activeIndex];
+  const initialSlide = CASE_SLIDES[0];
 
   return (
     <section
@@ -215,8 +235,12 @@ export function CasesCarousel3D() {
 
         <div className="cases-carousel__layout">
           <div className="cases-carousel__meta" aria-live="polite">
-            <p className="cases-carousel__project">{activeSlide.project}</p>
-            <p className="cases-carousel__category">{activeSlide.category}</p>
+            <p ref={projectRef} className="cases-carousel__project">
+              {initialSlide.project}
+            </p>
+            <p ref={categoryRef} className="cases-carousel__category">
+              {initialSlide.category}
+            </p>
           </div>
 
           <div className="cases-carousel__stage">
@@ -230,22 +254,45 @@ export function CasesCarousel3D() {
                       panelRefs.current[index] = node;
                     }}
                     className="cases-carousel__panel"
-                    aria-hidden={index !== activeIndex}
+                    aria-hidden={index !== 0}
                   >
-                    <div
-                      ref={(node) => {
-                        faceRefs.current[index] = node;
-                      }}
-                      className="cases-panel__face"
-                    >
+                    <div className="cases-panel__face">
                       <CasePhoneFrame
                         alt={`${slide.project} — ${slide.caption}`}
                         image={slide.image}
-                        active={index === activeIndex}
-                        eager={index < 3}
+                        eager={index < 4}
+                        frameRef={(node) => {
+                          frameRefs.current[index] = node;
+                        }}
                       />
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="cases-carousel__footer">
+            <p ref={captionRef} className="cases-carousel__caption" aria-live="polite">
+              {initialSlide.caption}
+            </p>
+            <div className="cases-carousel__controls">
+              <div className="cases-carousel__dots" role="tablist" aria-label="Eksempler">
+                {CASE_SLIDES.map((slide, index) => (
+                  <button
+                    key={slide.id}
+                    ref={(node) => {
+                      dotRefs.current[index] = node;
+                    }}
+                    type="button"
+                    role="tab"
+                    aria-selected={index === 0}
+                    aria-label={`${slide.project}, slide ${index + 1}`}
+                    className={`cases-carousel__dot-btn ${
+                      index === 0 ? "cases-carousel__dot-btn--active" : ""
+                    }`}
+                    onClick={() => scrollToIndex(index)}
+                  />
                 ))}
               </div>
             </div>
@@ -264,29 +311,6 @@ export function CasesCarousel3D() {
                 image={slide.image}
               />
             ))}
-          </div>
-        </div>
-
-        <div className="cases-carousel__footer">
-          <p className="cases-carousel__caption" aria-live="polite">
-            {activeSlide.caption}
-          </p>
-          <div className="cases-carousel__controls">
-            <div className="cases-carousel__dots" role="tablist" aria-label="Eksempler">
-              {CASE_SLIDES.map((slide, index) => (
-                <button
-                  key={slide.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={index === activeIndex}
-                  aria-label={`${slide.project}, slide ${index + 1}`}
-                  className={`cases-carousel__dot-btn ${
-                    index === activeIndex ? "cases-carousel__dot-btn--active" : ""
-                  }`}
-                  onClick={() => scrollToIndex(index)}
-                />
-              ))}
-            </div>
           </div>
         </div>
       </div>

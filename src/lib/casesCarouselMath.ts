@@ -7,8 +7,8 @@ function normalizeAngle(angle: number) {
 }
 
 export function getCasesScrollHeight(slideCount: number, mobile: boolean) {
-  const perSlide = mobile ? 55 : 70;
-  const base = mobile ? 100 : 115;
+  const perSlide = mobile ? 42 : 65;
+  const base = mobile ? 92 : 110;
   return `calc(${base + Math.max(0, slideCount - 1) * perSlide}vh)`;
 }
 
@@ -42,10 +42,10 @@ export function getCasePanelVisual(
   const t = clamp01(distance / step);
 
   return {
-    opacity: 0.22 + (1 - t) * 0.78,
-    scale: 0.64 + (1 - t) * 0.36,
+    opacity: 0.18 + (1 - t) * 0.74,
+    scale: 0.48 + (1 - t) * 0.3,
     zIndex: Math.round((1 - t) * 100),
-    blur: t * 2,
-    brightness: 0.5 + (1 - t) * 0.5,
+    blur: 0,
+    brightness: 1,
   };
 }

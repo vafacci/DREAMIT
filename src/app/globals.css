@@ -765,48 +765,53 @@ body {
 }
 
 .cases-carousel__pin {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-height: 100vh;
   min-height: 100dvh;
-  grid-template-rows: minmax(0, 1fr) auto;
-  align-items: stretch;
-  align-content: center;
+  height: 100dvh;
   overflow: hidden;
-  padding: clamp(0.35rem, 1.35vh, 0.75rem) 0 clamp(0.65rem, 2.5vh, 1.35rem);
+  padding: clamp(0.75rem, 2.5vh, 1.25rem) 0 clamp(0.85rem, 2.5vh, 1.25rem);
 }
 
 .cases-carousel__glow {
   pointer-events: none;
   position: absolute;
-  inset: 28% 8% 22%;
+  inset: 18% 6% 22%;
   background:
-    radial-gradient(ellipse 50% 40% at 50% 52%, rgba(76, 63, 217, 0.32), transparent 72%),
-    radial-gradient(ellipse 35% 28% at 25% 58%, rgba(122, 62, 240, 0.16), transparent 70%);
-  filter: blur(28px);
+    radial-gradient(ellipse 50% 40% at 50% 52%, rgba(76, 63, 217, 0.28), transparent 72%),
+    radial-gradient(ellipse 35% 28% at 25% 58%, rgba(122, 62, 240, 0.12), transparent 70%);
+  filter: blur(20px);
+  transform: translateZ(0);
 }
 
 .cases-carousel__layout {
-  --cases-panel-w: clamp(220px, 62vw, 280px);
-  --cases-panel-h: clamp(340px, min(88vw, 44dvh), 480px);
-  --cases-carousel-radius: clamp(230px, 54vw, 360px);
+  --cases-stack-gap: clamp(0.9rem, 2.8vh, 1.2rem);
+  --cases-panel-w: clamp(158px, 46vw, 195px);
+  --cases-panel-h: clamp(
+    230px,
+    calc(var(--cases-panel-w) * 1.72),
+    310px
+  );
+  --cases-carousel-radius: calc(var(--cases-panel-w) * 1.12);
 
   position: relative;
   z-index: 10;
-  display: grid;
+  display: flex;
   width: 100%;
-  height: 100%;
-  min-height: 0;
-  grid-template-rows: auto minmax(0, 1fr);
-  align-items: start;
-  justify-items: center;
-  row-gap: clamp(0.4rem, 1.35vh, 0.65rem);
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cases-stack-gap);
   padding: 0 1rem;
 }
 
 .cases-carousel__meta {
   position: relative;
-  z-index: 30;
-  grid-row: 1;
+  z-index: 2;
+  flex-shrink: 0;
   width: var(--cases-panel-w);
   text-align: center;
 }
@@ -839,45 +844,36 @@ body {
 
 .cases-carousel__footer {
   position: relative;
-  z-index: 100;
+  z-index: 2;
   display: flex;
   width: 100%;
   flex-direction: column;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.15rem 1rem 0;
-}
-
-.cases-carousel__controls {
-  position: relative;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
   flex-shrink: 0;
+  gap: 0.5rem;
+  padding: 0;
 }
 
 .cases-carousel__stage {
   position: relative;
-  z-index: 20;
-  grid-row: 2;
+  z-index: 1;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 100%;
-  min-height: 0;
-  overflow: visible;
+  height: calc(var(--cases-panel-h) + clamp(44px, 7vh, 60px));
+  overflow: hidden;
 }
 
 .cases-carousel__viewport {
   position: relative;
-  width: min(100%, calc(var(--cases-panel-w) + 4.5rem));
-  height: var(--cases-panel-h);
-  perspective: 1300px;
-  perspective-origin: 50% 48%;
+  width: min(100%, calc(var(--cases-panel-w) + 7rem));
+  height: 100%;
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
   overflow: visible;
+  contain: layout style;
 }
 
 .cases-carousel__floor {
@@ -886,13 +882,13 @@ body {
   left: 50%;
   bottom: -6%;
   z-index: 0;
-  height: 80px;
-  width: calc(var(--cases-panel-w) * 1.6);
-  transform: translateX(-50%) rotateX(78deg);
+  height: 64px;
+  width: calc(var(--cases-panel-w) * 1.5);
+  transform: translateX(-50%) rotateX(78deg) translateZ(0);
   transform-origin: 50% 100%;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(76, 63, 217, 0.24), transparent 68%);
-  filter: blur(16px);
+  background: radial-gradient(ellipse at center, rgba(76, 63, 217, 0.2), transparent 68%);
+  filter: blur(12px);
 }
 
 .cases-carousel__ring {
@@ -903,7 +899,7 @@ body {
   width: 100%;
   z-index: 10;
   transform-style: preserve-3d;
-  transform: rotateX(8deg);
+  transform: rotateX(3deg);
 }
 
 .cases-panel__face {
@@ -912,7 +908,6 @@ body {
   transform: translateZ(0.1px);
   transform-style: flat;
   backface-visibility: hidden;
-  will-change: filter;
 }
 
 .cases-panel__screen {
@@ -931,6 +926,7 @@ body {
   object-position: center top;
   pointer-events: none;
   user-select: none;
+  -webkit-user-drag: none;
 }
 
 .cases-carousel__panel {
@@ -942,7 +938,7 @@ body {
   width: var(--cases-panel-w);
   height: var(--cases-panel-h);
   transform-style: preserve-3d;
-  will-change: transform, opacity;
+  contain: layout style paint;
 }
 
 .cases-carousel__static-fallback {
@@ -957,9 +953,6 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: #0a0d14;
   box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.8);
-  transition:
-    box-shadow 0.35s ease,
-    border-color 0.35s ease;
 }
 
 .cases-panel__frame--active {
@@ -967,6 +960,13 @@ body {
   box-shadow:
     0 32px 64px -20px rgba(76, 63, 217, 0.5),
     0 0 0 1px rgba(138, 124, 255, 0.18);
+}
+
+.cases-carousel__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .cases-carousel__dots {
@@ -1016,15 +1016,11 @@ body {
 }
 
 @media (min-width: 768px) {
-  .cases-carousel__pin {
-    padding-bottom: clamp(1.35rem, 3.2vh, 2rem);
-  }
-
   .cases-carousel__layout {
-    --cases-panel-w: clamp(250px, 28vw, 320px);
-    --cases-panel-h: clamp(440px, 52vw, 560px);
-    --cases-carousel-radius: clamp(340px, 42vw, 480px);
-    gap: clamp(0.72rem, 2.2vh, 1.1rem);
+    --cases-panel-w: clamp(180px, 22vw, 230px);
+    --cases-panel-h: clamp(275px, calc(var(--cases-panel-w) * 1.72), 370px);
+    --cases-carousel-radius: calc(var(--cases-panel-w) * 1.15);
+    gap: clamp(0.9rem, 2.8vh, 1.25rem);
   }
 
   .cases-carousel__hint {
@@ -1034,9 +1030,9 @@ body {
 
 @media (min-width: 1024px) {
   .cases-carousel__layout {
-    --cases-panel-w: clamp(260px, 22vw, 330px);
-    --cases-panel-h: clamp(460px, 42vw, 580px);
-    --cases-carousel-radius: clamp(380px, 36vw, 520px);
+    --cases-panel-w: clamp(190px, 18vw, 240px);
+    --cases-panel-h: clamp(295px, calc(var(--cases-panel-w) * 1.72), 390px);
+    --cases-carousel-radius: calc(var(--cases-panel-w) * 1.16);
   }
 }
 
