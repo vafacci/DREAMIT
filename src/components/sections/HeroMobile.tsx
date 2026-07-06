@@ -6,7 +6,7 @@ export function HeroMobile() {
   return (
     <section
       data-section="hero"
-      className="hero-fold relative z-20 bg-dream-bg"
+      className="hero-fold relative z-20"
       aria-label="Intro"
     >
       <HeroIntroContent />

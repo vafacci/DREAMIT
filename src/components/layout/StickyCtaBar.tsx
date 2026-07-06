@@ -4,35 +4,35 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { CTA_PRIMARY, CTA_PRIMARY_HREF } from "@/lib/constants";
 
+const HIDE_SELECTOR = "[data-hide-sticky-cta], [data-primary-cta]";
+const SYNC_EVENT = "dream:sticky-cta-sync";
+
+function isInViewport(el: Element) {
+  const rect = el.getBoundingClientRect();
+  return rect.bottom > 0 && rect.top < window.innerHeight;
+}
+
 export function StickyCtaBar() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const visibleMap = new Map<Element, boolean>();
-
     const sync = () => {
-      const anyPrimaryVisible = [...visibleMap.values()].some(Boolean);
-      setVisible(!anyPrimaryVisible);
+      const shouldHide =
+        document.body.hasAttribute("data-cases-active") ||
+        Array.from(document.querySelectorAll(HIDE_SELECTOR)).some(isInViewport);
+      setVisible(!shouldHide);
     };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          visibleMap.set(entry.target, entry.isIntersecting);
-        });
-        sync();
-      },
-      { threshold: 0 },
-    );
-
-    document.querySelectorAll("[data-primary-cta]").forEach((el) => {
-      visibleMap.set(el, false);
-      observer.observe(el);
-    });
-
     sync();
+    window.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync);
+    window.addEventListener(SYNC_EVENT, sync);
 
-    return () => observer.disconnect();
+    return () => {
+      window.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+      window.removeEventListener(SYNC_EVENT, sync);
+    };
   }, []);
 
   return (

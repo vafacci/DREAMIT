@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 import { CTA_PRIMARY, CTA_PRIMARY_HREF } from "@/lib/constants";
 
 type PackageCardProps = {
@@ -14,18 +14,17 @@ type PackageCardProps = {
 function CheckIcon() {
   return (
     <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
       fill="none"
       aria-hidden
-      className="mt-0.5 shrink-0 text-dream-primary-soft"
+      className="mt-0.5 shrink-0 text-dream-text/70"
     >
-      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1" opacity="0.5" />
       <path
-        d="M5 8.2 7 10.2 11 6.2"
+        d="M2.5 7.2 5.5 10.2 11.5 4.2"
         stroke="currentColor"
-        strokeWidth="1.25"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -40,7 +39,7 @@ export function PackageCard({
   upfrontPrice,
   features,
   highlighted = false,
-  badge = "Anbefalet",
+  badge,
 }: PackageCardProps) {
   return (
     <article
@@ -51,53 +50,41 @@ export function PackageCard({
       {highlighted ? <div className="pricing-card__glow" aria-hidden /> : null}
 
       <div className="pricing-card__inner">
-        {badge ? (
-          <span
-            className={`pricing-card__badge ${
-              highlighted ? "package-card__badge motion-reduce:animate-none" : ""
-            }`}
-          >
-            {badge}
-          </span>
-        ) : null}
-
-        <div>
+        <div className="pricing-card__header">
           <h3 className="font-heading text-2xl leading-tight text-dream-text">{name}</h3>
-          <p className="mt-1 text-sm text-dream-muted">{tagline}</p>
+          {badge ? <span className="pricing-card__badge">{badge}</span> : null}
         </div>
 
         <div className="pricing-card__price">
-          <p className="text-sm text-dream-muted line-through decoration-dream-primary/40">
-            Fra {fullPrice}
-          </p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <p className="font-heading text-4xl leading-none text-dream-text">{upfrontPrice}</p>
-            <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-dream-muted">
-              ved opstart
-            </span>
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <p className="font-heading text-[2.75rem] leading-none tracking-tight text-dream-text sm:text-5xl">
+              {upfrontPrice}
+            </p>
+            <span className="text-sm text-dream-muted">ved opstart</span>
           </div>
+          <p className="mt-2 text-sm text-dream-muted">
+            <span className="line-through decoration-white/20">Fra {fullPrice}</span>
+          </p>
         </div>
 
-        <Link
+        <p className="pricing-card__tagline">{tagline}</p>
+
+        <Button
           href={CTA_PRIMARY_HREF}
-          className={`pricing-card__cta ${highlighted ? "pricing-card__cta--featured" : ""}`}
-          {...(highlighted ? { "data-primary-cta": true } : {})}
+          variant={highlighted ? "primary" : "secondary-inverted"}
+          className="pricing-card__btn w-full min-h-[44px]"
         >
           {CTA_PRIMARY}
-          <span aria-hidden> →</span>
-        </Link>
+        </Button>
 
-        <div className="pricing-card__features">
-          <p className="pricing-card__features-label">Inkluderet</p>
-          <ul className="flex flex-col gap-2.5">
-            {features.map((feature) => (
-              <li key={feature} className="flex gap-2.5 text-sm text-dream-muted">
-                <CheckIcon />
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul className="pricing-card__features">
+          {features.map((feature) => (
+            <li key={feature} className="flex gap-2.5 text-sm text-dream-muted">
+              <CheckIcon />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </article>
   );

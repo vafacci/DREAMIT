@@ -14,6 +14,7 @@ import {
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [atHero, setAtHero] = useState(true);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -22,9 +23,26 @@ export function Header() {
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    const hero = document.querySelector('[data-section="hero"]');
+    if (!hero) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setAtHero(entry.isIntersecting),
+      { threshold: 0 },
+    );
+
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 overflow-hidden bg-dream-bg/90 text-dream-text backdrop-blur-md">
-      <div className="container-site flex h-16 items-center justify-between lg:h-20">
+    <header
+      className={`site-header sticky top-0 z-50 overflow-hidden text-dream-text transition-[background-color,backdrop-filter] duration-300 motion-reduce:transition-none ${
+        atHero ? "site-header--hero" : "site-header--scrolled"
+      }`}
+    >
+      <div className="container-site relative z-10 flex h-16 items-center justify-between lg:h-20">
         {/* Symbol + desktop navigation — venstre */}
         <div className="flex items-center gap-8">
           <Link

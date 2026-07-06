@@ -7,15 +7,15 @@ export const PACKAGES_HEADER = {
 export const PACKAGES = [
   {
     name: "Helhed",
-    tagline: "Fra idé til salg",
+    tagline: "Hele rejsen med os",
     fullPrice: "28.500 kr.",
     upfrontPrice: "14.250 kr.",
     badge: "Anbefalet",
     features: [
-      "Brand & rådgivning",
-      "Firma & bankkonto",
-      "Webshop & betaling",
-      "Marketing & launch",
+      "Visuel identitet & rådgivning",
+      "CVR, bank & det praktiske",
+      "Shop med betaling",
+      "Launch & synlighed",
     ],
     highlighted: true,
   },

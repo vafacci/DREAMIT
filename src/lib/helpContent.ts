@@ -1,61 +1,53 @@
 export const HELP_HEADER = {
-  title: "Sådan hjælper vi dig",
+  title: "Du fokuserer på produktet — vi klarer resten",
   subtitle:
-    "Du behøver ikke have styr på det hele. Vi tager dig i hånden — fra idé til webshop, uden teknisk jargon.",
+    "Ingen tekniske hovedpiner og ingen generiske skabeloner. Vi bygger din webshop, så du kan sælge.",
 };
 
-export const HELP_SERVICES = [
+/** Inspireret af LavEnWebshops "ro i maven"-pillars: konkrete outcomes, ikke abstrakt proces */
+export const HELP_BENEFITS = [
   {
-    pillar: "Brand",
-    title: "Brandidentitet",
+    title: "Uden teknisk stress",
     description:
-      "Navn, logo, farver og retning — så dit brand føles som dig og ser professionelt ud fra dag ét.",
+      "Opsætning, betaling og lancering — du behøver ikke rode med teknikken selv.",
   },
   {
-    pillar: "Oprettelse",
-    title: "Firma og bankkonto",
+    title: "Skabt til dit produkt",
     description:
-      "Vi hjælper med oprettelse af firma og bankkonto — så du har det praktiske på plads og kan modtage betaling.",
+      "Layout, farver og tone der føles som dig — ikke en kopieret skabelon.",
   },
   {
-    pillar: "Shop",
-    title: "Webshop eller hjemmeside",
+    title: "Klar til at sælge",
     description:
-      "En side der er nem at forstå, nem at bruge og klar til at vise det, du laver.",
-  },
-  {
-    pillar: "Salg",
-    title: "Launch og synlighed",
-    description:
-      "Vi gør dig klar til at gå live og tager de første skridt mod salg sammen med dig.",
+      "Vi tester og gennemgår alt sammen med dig, før du går live.",
   },
 ] as const;
 
-export const HELP_PROCESS_LABEL = "Processen";
+export const HELP_PROCESS_LABEL = "Sådan ser samarbejdet ud";
 
 export const HELP_PROCESS = [
   {
     number: 1,
-    title: "Vi forstår din idé",
+    title: "Vi starter med en samtale",
     description:
-      "Vi starter med en samtale om din hobby, dit produkt og hvad du drømmer om at bygge.",
+      "Du fortæller om din idé, dit produkt og hvor du er. Vi finder den rigtige pakke og plan.",
   },
   {
     number: 2,
-    title: "Brand og oprettelse",
+    title: "Vi bygger din shop",
     description:
-      "Vi skaber din brandidentitet og hjælper med oprettelse af firma og bankkonto — så fundamentet er på plads.",
+      "Brand, design og opsætning — du får løbende indsigt og godkender undervejs.",
   },
   {
     number: 3,
-    title: "Vi bygger din webshop",
+    title: "Du går live sammen med os",
     description:
-      "Design, struktur og opsætning — en side der er klar til at vise og sælge det, du laver.",
+      "Vi tester og gennemgår alt — du ved præcis, hvad der sker, når du trykker publish.",
   },
-  {
-    number: 4,
-    title: "Vi gør dig klar til launch",
-    description:
-      "Vi finpudser det sidste og hjælper dig med at gå live — uden at det bliver uoverskueligt.",
-  },
+] as const;
+
+export const HELP_TRUST_STRIP = [
+  "50% ved opstart",
+  "Personlig kontakt",
+  "Typisk 3–8 uger",
 ] as const;

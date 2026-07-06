@@ -10,7 +10,7 @@ import {
 
 export function Footer() {
   return (
-    <footer id="kontakt" className="border-t border-dream-border bg-dream-bg py-12 text-dream-text">
+    <footer className="border-t border-dream-border bg-dream-bg py-12 text-dream-text">
       <div className="container-site">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr_1fr] lg:gap-8">
           <div>

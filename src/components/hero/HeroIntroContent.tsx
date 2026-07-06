@@ -26,8 +26,7 @@ export function HeroIntroContent({
         <p className="hero-intro__eyebrow">fra hobby til webshop</p>
 
         <p className="hero-intro__body">
-          Vi hjælper dig fra idé og drøm til en professionel webshop — uden at
-          det bliver uoverskueligt.
+          Fra idé til professionel webshop — uden at det bliver uoverskueligt.
         </p>
 
         <div className="hero-intro__actions">
