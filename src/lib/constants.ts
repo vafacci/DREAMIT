@@ -1,10 +1,10 @@
 export const SITE_NAME = "DREAMit";
 
 export const NAV_LINKS = [
-  { label: "Sådan hjælper vi", href: "#hvordan-vi-hjaelper" },
-  { label: "Pakker", href: "#pakker" },
-  { label: "FAQ", href: "#faq" },
+  { label: "Du kender det", href: "#problemet" },
+  { label: "Eksempler", href: "#eksempler" },
   { label: "Kontakt", href: "#kontakt" },
+  { label: "Pakker", href: "#pakker" },
 ] as const;
 
 export const CTA_PRIMARY = "BOOK ET MØDE";
@@ -18,7 +18,7 @@ export const CTA_BANNER_INTERVAL_MS = 3500;
 /** Primær konvertering — direkte handling */
 export const CTA_PRIMARY_HREF = "#kontakt";
 /** Blød indgang — læs om processen før man booker */
-export const CTA_SECONDARY_HREF = "#hvordan-vi-hjaelper";
+export const CTA_SECONDARY_HREF = "#problemet";
 
 export const COLORS = {
   black: "#05070D",

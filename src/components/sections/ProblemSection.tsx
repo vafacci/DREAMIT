@@ -116,9 +116,8 @@ export function ProblemSection() {
                     <h3 className="problem-card__title font-heading text-2xl uppercase tracking-[0.04em]">
                       {step.title}
                     </h3>
-                    <p className="text-body text-dream-text-dark/75">
-                      {step.subtitle}
-                    </p>
+                    <p className="text-body text-dream-text-dark/75">{step.pain}</p>
+                    <p className="mt-1.5 text-sm leading-snug text-dream-primary">{step.help}</p>
                   </div>
                 </article>
               }

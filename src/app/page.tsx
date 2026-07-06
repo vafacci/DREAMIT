@@ -1,14 +1,11 @@
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { StickyCtaBar } from "@/components/layout/StickyCtaBar";
-import { FAQSection } from "@/components/sections/FAQSection";
+import { CasesSection } from "@/components/sections/CasesSection";
 import { FinalCTASection } from "@/components/sections/FinalCTASection";
-import { HelpSection } from "@/components/sections/HelpSection";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { PackagesSection } from "@/components/sections/PackagesSection";
 import { ProblemSection } from "@/components/sections/ProblemSection";
-import { CasesSection } from "@/components/sections/CasesSection";
-import { OutcomesSection } from "@/components/sections/OutcomesSection";
 
 export default function Home() {
   return (
@@ -22,11 +19,8 @@ export default function Home() {
           <ProblemSection />
         </div>
         <CasesSection />
-        <HelpSection />
-        <PackagesSection />
-        <OutcomesSection />
-        <FAQSection />
         <FinalCTASection />
+        <PackagesSection />
       </main>
       <Footer />
       <StickyCtaBar />
