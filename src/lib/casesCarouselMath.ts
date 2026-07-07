@@ -6,10 +6,11 @@ function normalizeAngle(angle: number) {
   return ((angle % 360) + 360) % 360;
 }
 
-export function getCasesScrollHeight(slideCount: number, mobile: boolean) {
-  const perSlide = mobile ? 42 : 65;
-  const base = mobile ? 92 : 110;
-  return `calc(${base + Math.max(0, slideCount - 1) * perSlide}vh)`;
+export function getCasesProgressForIndex(index: number, slideCount: number) {
+  if (slideCount <= 1) return 0;
+  const maxIndex = slideCount - 1;
+  const target = Math.max(0, Math.min(index, maxIndex));
+  return target / maxIndex;
 }
 
 export function getCasesRingRotation(progress: number, slideCount: number) {

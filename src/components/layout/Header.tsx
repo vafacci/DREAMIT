@@ -15,6 +15,7 @@ import {
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [atHero, setAtHero] = useState(true);
+  const [onLightSection, setOnLightSection] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -36,11 +37,32 @@ export function Header() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const lightSections = document.querySelectorAll(
+      '[data-section="problem"], [data-section="contact"]',
+    );
+    if (!lightSections.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setOnLightSection(entries.some((entry) => entry.isIntersecting));
+      },
+      { threshold: 0.12, rootMargin: "-64px 0px -55% 0px" },
+    );
+
+    lightSections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
+
+  const headerTone = atHero
+    ? "site-header--hero"
+    : onLightSection
+      ? "site-header--light"
+      : "site-header--scrolled";
+
   return (
     <header
-      className={`site-header sticky top-0 z-50 overflow-hidden text-dream-text transition-[background-color,backdrop-filter] duration-300 motion-reduce:transition-none ${
-        atHero ? "site-header--hero" : "site-header--scrolled"
-      }`}
+      className={`site-header fixed inset-x-0 top-0 z-50 overflow-hidden transition-[background-color,backdrop-filter,color] duration-300 motion-reduce:transition-none ${headerTone}`}
     >
       <div className="container-site relative z-10 flex h-16 items-center justify-between lg:h-20">
         {/* Symbol + desktop navigation — venstre */}
@@ -59,7 +81,11 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-[14px] text-dream-muted transition-colors hover:text-dream-text"
+                className={`text-[14px] transition-colors ${
+                  onLightSection && !atHero
+                    ? "text-dream-text-dark/70 hover:text-dream-text-dark"
+                    : "text-dream-muted hover:text-dream-text"
+                }`}
               >
                 {link.label}
               </Link>
@@ -70,7 +96,10 @@ export function Header() {
         {/* Desktop CTAs + mobil menu — højre */}
         <div className="flex items-center justify-end gap-3">
           <div className="hidden items-center gap-3 lg:flex">
-            <Button href={CTA_SECONDARY_HREF} variant="secondary-inverted">
+            <Button
+              href={CTA_SECONDARY_HREF}
+              variant={onLightSection && !atHero ? "secondary" : "secondary-inverted"}
+            >
               {CTA_SECONDARY}
             </Button>
             <PrimaryBannerButton />
@@ -78,7 +107,9 @@ export function Header() {
 
           <button
             type="button"
-            className="inline-flex h-8 items-center text-[14px] font-medium tracking-wide text-dream-text lg:hidden lg:h-9"
+            className={`inline-flex h-8 items-center text-[14px] font-medium tracking-wide lg:hidden lg:h-9 ${
+              onLightSection && !atHero ? "text-dream-text-dark" : "text-dream-text"
+            }`}
             onClick={() => setMenuOpen(!menuOpen)}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"

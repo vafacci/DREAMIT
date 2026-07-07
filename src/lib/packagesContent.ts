@@ -1,6 +1,7 @@
 export const PACKAGES_HEADER = {
   label: "Pakker",
-  title: "En pakke der passer til dig",
+  title: "Vælg pakke",
+  lead: "En pakke der passer til dig",
   subtitle: "50% ved opstart — resten først når din webshop sælger.",
 };
 

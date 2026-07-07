@@ -17,9 +17,7 @@ export function StickyCtaBar() {
 
   useEffect(() => {
     const sync = () => {
-      const shouldHide =
-        document.body.hasAttribute("data-cases-active") ||
-        Array.from(document.querySelectorAll(HIDE_SELECTOR)).some(isInViewport);
+      const shouldHide = Array.from(document.querySelectorAll(HIDE_SELECTOR)).some(isInViewport);
       setVisible(!shouldHide);
     };
 

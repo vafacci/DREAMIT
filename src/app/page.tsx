@@ -10,10 +10,10 @@ import { ProblemSection } from "@/components/sections/ProblemSection";
 export default function Home() {
   return (
     <>
+      <Header />
       <main>
         <div className="relative">
           <div className="hero-shell dream-hero-surface">
-            <Header />
             <HeroSection />
           </div>
           <ProblemSection />

@@ -1,28 +1,22 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import type { StaticImageData } from "next/image";
 import { CASE_SLIDES } from "@/lib/casesContent";
 import {
   getActiveSlideIndex,
   getCasePanelVisual,
+  getCasesProgressForIndex,
   getCasesRingRotation,
-  getCasesScrollHeight,
 } from "@/lib/casesCarouselMath";
-import { bindScrollTriggerRefresh, loadGsapScroll } from "@/lib/gsapScroll";
-import { isMobileDevice } from "@/lib/isMobileDevice";
+import { loadGsapScroll } from "@/lib/gsapScroll";
 
-function syncStickyCta() {
-  window.dispatchEvent(new CustomEvent("dream:sticky-cta-sync"));
-}
+const SWIPE_PIXELS_PER_SLIDE = 72;
+const NAV_DURATION = 0.55;
+const DRAG_THRESHOLD = 8;
 
-function setCasesActive(active: boolean) {
-  if (active) {
-    document.body.setAttribute("data-cases-active", "");
-  } else {
-    document.body.removeAttribute("data-cases-active");
-  }
-  syncStickyCta();
+function clamp01(value: number) {
+  return Math.max(0, Math.min(1, value));
 }
 
 function CasePhoneFrame({
@@ -56,7 +50,7 @@ function CasePhoneFrame({
 }
 
 export function CasesCarousel3D() {
-  const sectionRef = useRef<HTMLElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const frameRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -65,9 +59,10 @@ export function CasesCarousel3D() {
   const captionRef = useRef<HTMLParagraphElement>(null);
   const dotRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const activeIndexRef = useRef(0);
-  const [scrollHeight, setScrollHeight] = useState(() =>
-    getCasesScrollHeight(CASE_SLIDES.length, false),
-  );
+  const progressRef = useRef(0);
+  const navTweenRef = useRef<{ kill: () => void } | null>(null);
+  const reducedMotionRef = useRef(false);
+  const goToIndexRef = useRef<(index: number, animate?: boolean) => void>(() => {});
 
   const updateActiveUi = useCallback((index: number) => {
     if (index === activeIndexRef.current) return;
@@ -120,20 +115,49 @@ export function CasesCarousel3D() {
     [updateActiveUi],
   );
 
-  const scrollToIndex = useCallback((index: number) => {
-    const section = sectionRef.current;
-    if (!section) return;
+  const goToProgress = useCallback(
+    (target: number, animate = true) => {
+      const clamped = clamp01(target);
 
-    const maxIndex = Math.max(0, CASE_SLIDES.length - 1);
-    const target = Math.max(0, Math.min(index, maxIndex));
-    const progress = maxIndex === 0 ? 0 : target / maxIndex;
-    const rect = section.getBoundingClientRect();
-    const sectionTop = window.scrollY + rect.top;
-    const scrollable = section.offsetHeight - window.innerHeight;
-    const targetY = sectionTop + progress * scrollable;
+      if (!animate || reducedMotionRef.current) {
+        navTweenRef.current?.kill();
+        navTweenRef.current = null;
+        progressRef.current = clamped;
+        applyRing(clamped);
+        return;
+      }
 
-    window.scrollTo({ top: targetY, behavior: "smooth" });
-  }, []);
+      navTweenRef.current?.kill();
+
+      const proxy = { p: progressRef.current };
+      void loadGsapScroll().then(({ gsap }) => {
+        navTweenRef.current = gsap.to(proxy, {
+          p: clamped,
+          duration: NAV_DURATION,
+          ease: "power2.out",
+          onUpdate: () => {
+            progressRef.current = proxy.p;
+            applyRing(proxy.p);
+          },
+          onComplete: () => {
+            navTweenRef.current = null;
+          },
+        });
+      });
+    },
+    [applyRing],
+  );
+
+  const goToIndex = useCallback(
+    (index: number, animate = true) => {
+      const maxIndex = Math.max(0, CASE_SLIDES.length - 1);
+      const target = Math.max(0, Math.min(index, maxIndex));
+      goToProgress(getCasesProgressForIndex(target, CASE_SLIDES.length), animate);
+    },
+    [goToProgress],
+  );
+
+  goToIndexRef.current = goToIndex;
 
   useLayoutEffect(() => {
     CASE_SLIDES.forEach((slide) => {
@@ -143,28 +167,20 @@ export function CasesCarousel3D() {
   }, []);
 
   useLayoutEffect(() => {
-    const section = sectionRef.current;
     const ring = ringRef.current;
-    if (!section || !ring) return;
-
-    const mobile = isMobileDevice();
-    const height = getCasesScrollHeight(CASE_SLIDES.length, mobile);
-    setScrollHeight(height);
-    section.style.height = height;
-    updateActiveUi(0);
-    applyRing(0);
+    if (!ring) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      setCasesActive(true);
-      return () => setCasesActive(false);
-    }
+    reducedMotionRef.current = reduced;
+
+    progressRef.current = 0;
+    applyRing(0);
+
+    if (reduced) return;
 
     let cancelled = false;
-    let ctx: { revert: () => void } | undefined;
-    let unbindRefresh: (() => void) | undefined;
 
-    void loadGsapScroll().then(({ gsap, ScrollTrigger }) => {
+    void loadGsapScroll().then(({ gsap }) => {
       if (cancelled) return;
 
       gsap.set(ring, {
@@ -180,56 +196,109 @@ export function CasesCarousel3D() {
           transformStyle: "preserve-3d",
         });
       });
-
-      ctx = gsap.context(() => {
-        ScrollTrigger.create({
-          id: "cases-carousel",
-          trigger: section,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: mobile ? true : 0.75,
-          pin: ".cases-carousel__pin",
-          anticipatePin: 1,
-          fastScrollEnd: mobile,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => applyRing(self.progress),
-          onEnter: () => setCasesActive(true),
-          onEnterBack: () => setCasesActive(true),
-          onLeave: () => setCasesActive(false),
-          onLeaveBack: () => setCasesActive(false),
-        });
-      }, section);
-
-      applyRing(0);
-
-      const refresh = () => {
-        ScrollTrigger.refresh();
-        const trigger = ScrollTrigger.getById("cases-carousel");
-        if (trigger) applyRing(trigger.progress);
-      };
-
-      refresh();
-      unbindRefresh = bindScrollTriggerRefresh(refresh, mobile);
     });
 
     return () => {
       cancelled = true;
-      setCasesActive(false);
-      unbindRefresh?.();
-      ctx?.revert();
+      navTweenRef.current?.kill();
+      navTweenRef.current = null;
     };
-  }, [applyRing, updateActiveUi]);
+  }, [applyRing]);
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || reducedMotionRef.current) return;
+
+    let dragging = false;
+    let moved = false;
+    let startX = 0;
+    let startY = 0;
+    let startProgress = 0;
+    let lockAxis: "x" | "y" | null = null;
+
+    const endDrag = (pointerId: number) => {
+      if (!dragging) return;
+
+      dragging = false;
+      lockAxis = null;
+      viewport.removeAttribute("data-dragging");
+
+      try {
+        viewport.releasePointerCapture(pointerId);
+      } catch {
+        // Pointer may already be released.
+      }
+
+      if (moved) {
+        const index = getActiveSlideIndex(progressRef.current, CASE_SLIDES.length);
+        goToIndexRef.current(index, true);
+      }
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+
+      navTweenRef.current?.kill();
+      navTweenRef.current = null;
+
+      dragging = true;
+      moved = false;
+      lockAxis = null;
+      startX = event.clientX;
+      startY = event.clientY;
+      startProgress = progressRef.current;
+      viewport.setAttribute("data-dragging", "");
+      viewport.setPointerCapture(event.pointerId);
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (!dragging) return;
+
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+
+      if (!lockAxis) {
+        if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+        lockAxis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      }
+
+      if (lockAxis === "y") {
+        endDrag(event.pointerId);
+        return;
+      }
+
+      event.preventDefault();
+      moved = true;
+
+      const maxIndex = Math.max(1, CASE_SLIDES.length - 1);
+      const deltaProgress = (-dx / SWIPE_PIXELS_PER_SLIDE) / maxIndex;
+      const next = clamp01(startProgress + deltaProgress);
+
+      progressRef.current = next;
+      applyRing(next);
+    };
+
+    const onPointerUp = (event: PointerEvent) => {
+      endDrag(event.pointerId);
+    };
+
+    viewport.addEventListener("pointerdown", onPointerDown);
+    viewport.addEventListener("pointermove", onPointerMove);
+    viewport.addEventListener("pointerup", onPointerUp);
+    viewport.addEventListener("pointercancel", onPointerUp);
+
+    return () => {
+      viewport.removeEventListener("pointerdown", onPointerDown);
+      viewport.removeEventListener("pointermove", onPointerMove);
+      viewport.removeEventListener("pointerup", onPointerUp);
+      viewport.removeEventListener("pointercancel", onPointerUp);
+    };
+  }, [applyRing]);
 
   const initialSlide = CASE_SLIDES[0];
 
   return (
-    <section
-      ref={sectionRef}
-      className="cases-carousel"
-      style={{ height: scrollHeight }}
-      data-hide-sticky-cta
-      aria-label="Eksempler"
-    >
+    <section className="cases-carousel" aria-label="Eksempler">
       <div className="cases-carousel__pin">
         <div className="cases-carousel__glow" aria-hidden />
 
@@ -244,7 +313,11 @@ export function CasesCarousel3D() {
           </div>
 
           <div className="cases-carousel__stage">
-            <div className="cases-carousel__viewport">
+            <div
+              ref={viewportRef}
+              className="cases-carousel__viewport"
+              aria-roledescription="carousel"
+            >
               <div className="cases-carousel__floor" aria-hidden />
               <div ref={ringRef} className="cases-carousel__ring">
                 {CASE_SLIDES.map((slide, index) => (
@@ -291,17 +364,12 @@ export function CasesCarousel3D() {
                     className={`cases-carousel__dot-btn ${
                       index === 0 ? "cases-carousel__dot-btn--active" : ""
                     }`}
-                    onClick={() => scrollToIndex(index)}
+                    onClick={() => goToIndex(index)}
                   />
                 ))}
               </div>
             </div>
           </div>
-
-          <p className="cases-carousel__hint">
-            <span className="cases-carousel__hint-label">Scroll</span>
-            <span className="cases-carousel__hint-line" aria-hidden />
-          </p>
 
           <div className="cases-carousel__static-fallback">
             {CASE_SLIDES.map((slide) => (

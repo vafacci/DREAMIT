@@ -1,5 +1,6 @@
 import { PackageCard } from "@/components/ui/PackageCard";
 import { Reveal } from "@/components/ui/Reveal";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { PACKAGES, PACKAGES_HEADER } from "@/lib/packagesContent";
 
 export function PackagesSection() {
@@ -12,11 +13,14 @@ export function PackagesSection() {
     >
       <div className="container-site">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="pricing-section__label">{PACKAGES_HEADER.label}</span>
-          <h2 className="font-heading mt-6 text-[2.25rem] leading-[0.95] tracking-tight sm:text-[2.75rem]">
-            {PACKAGES_HEADER.title}
-          </h2>
-          <p className="text-body mt-4 text-dream-muted">{PACKAGES_HEADER.subtitle}</p>
+          <SectionHeader
+            inverted
+            label={PACKAGES_HEADER.label}
+            title={PACKAGES_HEADER.title}
+            lead={PACKAGES_HEADER.lead}
+            subtitle={PACKAGES_HEADER.subtitle}
+            className="mx-auto max-w-2xl text-center"
+          />
         </Reveal>
 
         <div className="pricing-cards-grid mx-auto mt-14 max-w-5xl">
