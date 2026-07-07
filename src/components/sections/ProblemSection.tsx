@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { FlipReveal } from "@/components/ui/FlipReveal";
+import { CardReveal } from "@/components/ui/CardReveal";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { PROBLEM_HEADER, PROBLEM_STEPS } from "@/lib/problemContent";
@@ -52,7 +52,7 @@ function ProblemIntro() {
   const { before, after, pillars } = PROBLEM_HEADER.intro;
 
   return (
-    <p className="text-body max-w-lg text-dream-text-dark/75">
+    <p className="text-body max-w-lg text-dream-muted">
       {before}{" "}
       {pillars.map((word, index) => (
         <span key={word}>
@@ -65,33 +65,17 @@ function ProblemIntro() {
   );
 }
 
-function ProblemCardBack({
-  title,
-  index,
-}: {
-  title: string;
-  index: number;
-}) {
-  return (
-    <div className="flip-card-back h-full min-h-[280px]">
-      <span className="flip-card-back__index">
-        {String(index + 1).padStart(2, "0")}
-      </span>
-      <span className="flip-card-back__title">{title}</span>
-    </div>
-  );
-}
-
 export function ProblemSection() {
   return (
     <section
       id="problemet"
       data-section="problem"
-      className="problem-section section-peek-overlap relative z-0 section-padding bg-white pt-6 lg:pt-[var(--spacing-section-y)]"
+      className="problem-section section-peek-overlap relative z-[1] section-padding bg-dream-bg pt-8 text-dream-text lg:pt-[var(--spacing-section-y)]"
     >
       <div className="container-site">
         <Reveal>
           <SectionHeader
+            inverted
             title={PROBLEM_HEADER.title}
             subtitle={<ProblemIntro />}
           />
@@ -99,11 +83,12 @@ export function ProblemSection() {
 
         <div className="mt-14 grid gap-6 lg:grid-cols-2 lg:gap-8">
           {PROBLEM_STEPS.map((step, index) => (
-            <FlipReveal
+            <div
               key={step.title}
-              delay={index * 120}
-              back={<ProblemCardBack title={step.title} index={index} />}
-              front={
+              id={step.title.toLowerCase()}
+              className="scroll-mt-28"
+            >
+              <CardReveal delay={index * 90}>
                 <article className="problem-card group flex h-full flex-col">
                   <div className="problem-card__image">
                     <EditorialImage
@@ -117,11 +102,13 @@ export function ProblemSection() {
                       {step.title}
                     </h3>
                     <p className="text-body text-dream-text-dark/75">{step.pain}</p>
-                    <p className="mt-1.5 text-sm leading-snug text-dream-primary">{step.help}</p>
+                    <p className="mt-1.5 text-sm leading-snug text-dream-primary">
+                      {step.help}
+                    </p>
                   </div>
                 </article>
-              }
-            />
+              </CardReveal>
+            </div>
           ))}
         </div>
       </div>

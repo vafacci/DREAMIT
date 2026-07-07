@@ -60,14 +60,14 @@
   --spacing-page-x-lg: 3rem;
   --max-width-content: 80rem;
 
-  --hero-fold-vh: 72;
-  --section-peek-vh: 28;
+  --hero-fold-vh: 78;
+  --section-peek-vh: 22;
   --hero-scroll-vh: 220;
 
   --site-header-h: 4rem;
   --hero-header-gap: clamp(1.5rem, 4.5vw, 2.5rem);
-  --hero-intro-pt: calc(var(--site-header-h) + var(--hero-header-gap));
-  --hero-intro-pb: clamp(1.75rem, 4vw, 2rem);
+  --hero-intro-pt: 0;
+  --hero-intro-pb: 0;
   --hero-intro-px: 2rem;
   --hero-logo-mb: clamp(1.75rem, 4.5vw, 2.25rem);
   --hero-eyebrow-mb: 1rem;
@@ -416,7 +416,26 @@ body {
   }
 
   .problem-section {
-    background-color: #ffffff;
+    background-color: var(--dream-bg);
+  }
+
+  .card-reveal {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0) scale(0.97);
+    transition:
+      opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--card-reveal-delay, 0ms);
+    will-change: opacity, transform;
+  }
+
+  .card-reveal.is-visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  .card-reveal.is-visible .problem-card__image img {
+    transform: scale(1);
   }
 
   .problem-section .problem-card {
@@ -433,8 +452,13 @@ body {
 
   .problem-section .problem-card__image {
     position: relative;
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 3 / 4;
     overflow: hidden;
+  }
+
+  .problem-section .problem-card__image img {
+    transform: scale(1.05);
+    transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .problem-section .problem-card__body {
@@ -477,7 +501,7 @@ body {
 
   .problem-pillar-word {
     font-weight: 500;
-    color: var(--dream-text-dark);
+    color: var(--dream-text);
   }
 
   .help-pillar-label {
@@ -498,12 +522,15 @@ body {
       transform: none;
     }
 
-    .hero-intro__symbol {
-      animation: none;
+    .card-reveal {
+      opacity: 1;
+      transform: none;
+      transition: none;
     }
 
-    .hero-intro__symbol-pulse {
-      animation: none;
+    .problem-section .problem-card__image img {
+      transform: none;
+      transition: none;
     }
   }
 
@@ -529,10 +556,18 @@ body {
     opacity: 0.35;
   }
 
-  .site-header > .container-site,
-  .site-header > div {
+  .site-header {
+    transform: translateY(0);
+  }
+
+  .site-header--hidden {
+    transform: translateY(-100%);
+    pointer-events: none;
+  }
+
+  .site-header > .container-site {
     position: relative;
-    z-index: 1;
+    z-index: 2;
   }
 
   .hero-shell {
@@ -557,10 +592,127 @@ body {
     color: var(--dream-text-dark);
   }
 
+  .site-header-menu__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    border: 0;
+    background: rgb(5 7 13 / 0.55);
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .site-header-menu__backdrop.is-active {
+    opacity: 1;
+  }
+
+  .site-header-menu {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    min-height: 100dvh;
+    flex-direction: column;
+    overflow-y: auto;
+    padding-top: var(--site-header-h);
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgb(76 63 217 / 0.22), transparent 58%),
+      var(--dream-bg);
+    color: var(--dream-text);
+    opacity: 0;
+    transform: translate3d(0, -2.5rem, 0) scale(0.97);
+    transform-origin: top center;
+    transition:
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform, opacity;
+  }
+
+  .site-header-menu.is-active {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  .site-header-menu__inner {
+    display: flex;
+    width: 100%;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: clamp(2.5rem, 8vh, 5rem) clamp(3rem, 10vh, 6rem);
+  }
+
+  .site-header-menu__sections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .site-header-menu__section-link {
+    padding-block: 0.55rem;
+    font-size: clamp(1.5rem, 5.5vw, 2.75rem);
+    line-height: 0.95;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--dream-text);
+    transform: translate3d(0, 1.75rem, 0);
+    transition: color 0.2s ease;
+  }
+
+  .site-header-menu.is-active .site-header-menu__section-link {
+    animation: site-header-menu-item-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(0.08s + (var(--menu-item-index, 0) * 0.055s));
+  }
+
+  .site-header-menu__section-link:hover {
+    color: var(--dream-primary-soft);
+  }
+
+  .site-header-menu__cta-link {
+    margin-top: 1.25rem;
+    padding-block: 0.55rem;
+    font-size: clamp(1.5rem, 5.5vw, 2.75rem);
+    line-height: 0.95;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #b8a8ff 0%, #8a7cff 48%, #c4b5ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    transform: translate3d(0, 1.75rem, 0);
+    transition: filter 0.2s ease;
+  }
+
+  .site-header-menu.is-active .site-header-menu__cta-link {
+    animation: site-header-menu-item-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(0.08s + (var(--menu-item-index, 0) * 0.055s));
+  }
+
+  .site-header-menu__cta-link:hover {
+    filter: brightness(1.1);
+  }
+
+  @keyframes site-header-menu-item-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 1.75rem, 0);
+    }
+
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
   .hero-fold {
     position: relative;
+    display: flex;
+    min-height: calc(100svh - var(--section-peek-vh) * 1svh);
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    padding-top: var(--site-header-h);
     background-color: var(--dream-bg);
-    min-height: calc(var(--hero-fold-vh) * 1svh);
   }
 
   .hero-fold::before {
@@ -590,32 +742,6 @@ body {
     flex-direction: column;
     align-items: center;
     margin-bottom: var(--hero-logo-mb);
-  }
-
-  .hero-intro__symbol-pulse {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: clamp(1rem, 3vw, 1.35rem);
-    transform-origin: center center;
-    animation: hero-breathe 5.5s ease-in-out infinite;
-  }
-
-  .hero-intro__symbol {
-    width: clamp(3.25rem, 14vw, 4.5rem);
-    height: clamp(3.25rem, 14vw, 4.5rem);
-    display: block;
-  }
-
-  @keyframes hero-breathe {
-    0%,
-    100% {
-      transform: scale(0.96);
-    }
-
-    50% {
-      transform: scale(1.06);
-    }
   }
 
   .hero-intro__wordmark {
@@ -682,7 +808,12 @@ body {
   }
 
   .section-peek-overlap {
+    position: relative;
+    z-index: 1;
     margin-top: 0;
+    border-top-left-radius: 1.25rem;
+    border-top-right-radius: 1.25rem;
+    box-shadow: 0 -18px 48px rgb(5 7 13 / 0.55);
   }
 
   .final-cta {
@@ -700,16 +831,19 @@ body {
     pointer-events: none;
     background-image: url("/images/book-meeting.png");
     background-size: cover;
-    background-position: center 24%;
-    opacity: 0.42;
-    filter: blur(10px);
-    transform: scale(1.05);
+    background-position: center 38%;
   }
 
   .final-cta__backdrop-scrim {
     position: absolute;
     inset: 0;
-    background: rgb(250 250 248 / 0.86);
+    background: linear-gradient(
+      180deg,
+      rgb(250 250 248 / 0.78) 0%,
+      rgb(250 250 248 / 0.58) 42%,
+      rgb(250 250 248 / 0.58) 58%,
+      rgb(250 250 248 / 0.78) 100%
+    );
   }
 
   @media (min-width: 1024px) {
@@ -775,6 +909,29 @@ body {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  .site-header--hidden {
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .site-header-menu,
+  .site-header-menu__backdrop {
+    transition: none !important;
+  }
+
+  .site-header-menu.is-active,
+  .site-header-menu__backdrop.is-active {
+    opacity: 1;
+    transform: none;
+  }
+
+  .site-header-menu__section-link,
+  .site-header-menu__cta-link {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   .package-card--featured,

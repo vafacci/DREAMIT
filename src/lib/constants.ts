@@ -1,11 +1,22 @@
 export const SITE_NAME = "DREAMit";
 
-export const NAV_LINKS = [
-  { label: "Du kender det", href: "#problemet" },
-  { label: "Eksempler", href: "#eksempler" },
-  { label: "Kontakt", href: "#kontakt" },
-  { label: "Pakker", href: "#pakker" },
+/** Altid synlige i header-baren */
+export const HEADER_QUICK_LINKS = [
+  { label: "PAKKER", href: "#pakker" },
+  { label: "EKSEMPLER", href: "#eksempler" },
 ] as const;
+
+/** Sektioner i menu-overlay */
+export const MENU_SECTION_LINKS = [
+  { label: "START", href: "#start" },
+  { label: "DU KENDER DET", href: "#problemet" },
+  { label: "EKSEMPLER", href: "#eksempler" },
+  { label: "PAKKER", href: "#pakker" },
+  { label: "KONTAKT", href: "#kontakt" },
+] as const;
+
+/** Footer og andre steder der skal vise fuld navigation */
+export const NAV_LINKS = MENU_SECTION_LINKS;
 
 export const CTA_PRIMARY = "BOOK ET MØDE";
 export const CTA_SECONDARY = "SE PROCESSEN";
